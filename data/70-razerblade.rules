@@ -1,0 +1,4 @@
+# Give the logged-in user access to the Razer Blade control interface
+# (keyboard RGB and fan control) used by razerbladed.
+# Must sort before 73-seat-late.rules for the uaccess tag to take effect.
+SUBSYSTEM=="hidraw", KERNEL=="hidraw*", ATTRS{idVendor}=="1532", ATTRS{idProduct}=="023a", TAG+="uaccess"

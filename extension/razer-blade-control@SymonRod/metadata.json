@@ -1,0 +1,9 @@
+{
+  "uuid": "razer-blade-control@SymonRod",
+  "name": "Razer Blade Control",
+  "description": "Keyboard RGB lighting, fan speed, performance profile and NVIDIA GPU power mode for Razer Blade laptops, from Quick Settings.\n\nThis extension is only the user interface: it needs the razerbladed service and its udev rule, which are installed by install.sh from the project's repository. Supported: Razer Blade 15 Advanced (2019).",
+  "shell-version": ["50"],
+  "url": "https://github.com/SymonRod/razer-blade-control",
+  "gettext-domain": "razer-blade-control",
+  "version-name": "1.0"
+}

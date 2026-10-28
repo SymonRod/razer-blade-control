@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>Razer Blade Control</vendor>
+  <action id="io.github.razerblade.gpu">
+    <description>Change the NVIDIA GPU power mode</description>
+    <description xml:lang="it">Cambiare la modalità di alimentazione della GPU NVIDIA</description>
+    <message>Authentication is required to change the NVIDIA GPU power mode</message>
+    <message xml:lang="it">Per cambiare la modalità della GPU NVIDIA è necessario autenticarsi</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/local/libexec/razerblade-gpu</annotate>
+  </action>
+</policyconfig>

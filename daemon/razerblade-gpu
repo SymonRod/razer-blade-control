@@ -1,0 +1,48 @@
+#!/usr/bin/bash
+# SPDX-License-Identifier: GPL-2.0-or-later
+# razerblade-gpu MODE - choose how the NVIDIA GPU is powered; run through pkexec.
+# The mode takes effect at the next boot:
+#   standard    driver defaults: on Turing the GPU never powers off
+#   hybrid      runtime D3: the GPU powers off whenever nothing uses it
+#   integrated  the GPU is detached from the PCI bus at boot and stays off
+#               (no HDMI, no USB-C on the GPU, no CUDA)
+set -euo pipefail
+umask 022
+PATH=/usr/sbin:/usr/bin
+
+MODPROBE_CONF=/etc/modprobe.d/razerblade-gpu.conf  # razerbladed reads "# mode=" from it
+UDEV_RULE=/etc/udev/rules.d/50-razerblade-gpu.rules
+
+mode=${1:-}
+case $mode in
+    standard|hybrid|integrated) ;;
+    *) echo "usage: $0 standard|hybrid|integrated" >&2; exit 2 ;;
+esac
+
+{
+    echo '# Managed by razerblade-gpu, do not edit.'
+    echo "# mode=$mode"
+    case $mode in
+        hybrid) echo 'options nvidia NVreg_DynamicPowerManagement=0x02' ;;
+        integrated) printf 'blacklist %s\n' nvidia nvidia_drm nvidia_modeset nvidia_uvm ;;
+    esac
+} > "$MODPROBE_CONF.tmp"
+mv -f "$MODPROBE_CONF.tmp" "$MODPROBE_CONF"
+
+if [[ $mode == integrated ]]; then
+    cat > "$UDEV_RULE.tmp" <<'EOF'
+# Managed by razerblade-gpu, do not edit.
+# Detach every NVIDIA function (VGA, audio, USB, UCSI) at boot, so the PCIe
+# root port can runtime-suspend and cut the GPU's power (D3cold).
+ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{power/control}="auto", ATTR{remove}="1"
+EOF
+    mv -f "$UDEV_RULE.tmp" "$UDEV_RULE"
+else
+    rm -f "$UDEV_RULE"
+fi
+
+# The nvidia modules are normally loaded after the switch to the root fs; if they
+# ever end up in the initramfs, it has to carry the new options too.
+if lsinitrd 2>/dev/null | grep -q '/nvidia[^/]*\.ko'; then
+    dracut --force
+fi

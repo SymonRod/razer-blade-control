@@ -1,0 +1,13 @@
+[Unit]
+Description=Razer Blade keyboard RGB and fan control
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=dbus
+BusName=io.github.razerblade.Daemon
+ExecStart=@BINDIR@/razerbladed
+Restart=on-failure
+
+[Install]
+WantedBy=graphical-session.target

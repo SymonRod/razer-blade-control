@@ -1,0 +1,279 @@
+# Italian translations for razer-blade-control package
+# Traduzioni italiane per il pacchetto razer-blade-control.
+# Copyright (C) 2026 SymonRod
+# This file is distributed under the same license as the razer-blade-control package.
+# SymonRod, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: razer-blade-control\n"
+"Report-Msgid-Bugs-To: https://github.com/SymonRod/razer-blade-control/"
+"issues\n"
+"POT-Creation-Date: 2026-10-28 20:07+0100\n"
+"PO-Revision-Date: 2026-10-28 20:07+0100\n"
+"Last-Translator: SymonRod\n"
+"Language-Team: Italian\n"
+"Language: it\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: extension.js:30
+msgid "Draws about 7 W even when idle"
+msgstr "Consuma circa 7 W anche quando non serve"
+
+#: extension.js:31
+msgid "Powers off by itself when nothing uses it"
+msgstr "Si spegne da sola quando nessuno la usa"
+
+#: extension.js:32
+msgid "No HDMI, GPU USB-C or CUDA"
+msgstr "Niente HDMI, USB-C della GPU e CUDA"
+
+#: extension.js:73
+msgid "Service not running"
+msgstr "Servizio non attivo"
+
+#: extension.js:75 prefs.js:101
+msgid "Device not accessible"
+msgstr "Dispositivo non accessibile"
+
+#: extension.js:138
+msgid "Keyboard"
+msgstr "Tastiera"
+
+#: extension.js:152 extension.js:240 extension.js:249
+msgid "RGB Keyboard"
+msgstr "Tastiera RGB"
+
+#: extension.js:163
+msgid "Color"
+msgstr "Colore"
+
+#: extension.js:182 prefs.js:76
+msgid "Speed"
+msgstr "Velocità"
+
+#: extension.js:185
+msgid "Effect speed"
+msgstr "Velocità effetto"
+
+#: extension.js:203
+msgid "Razer logo"
+msgstr "Logo Razer"
+
+#: extension.js:207
+msgid "Custom colors and more options…"
+msgstr "Colori personalizzati e altre opzioni…"
+
+#: extension.js:247
+msgid "Static · low battery"
+msgstr "Statico · batteria bassa"
+
+#: extension.js:275
+msgid "Keyboard brightness"
+msgstr "Luminosità tastiera"
+
+#: extension.js:300
+msgid "Fans"
+msgstr "Ventole"
+
+#: extension.js:314 extension.js:362 extension.js:373
+msgid "Fans and Performance"
+msgstr "Ventole e prestazioni"
+
+#: extension.js:317
+msgid "Profile"
+msgstr "Profilo"
+
+#: extension.js:326 extension.js:337
+msgid "Fan speed"
+msgstr "Velocità ventole"
+
+#: extension.js:327 daemon.js:34
+msgid "Automatic"
+msgstr "Automatica"
+
+#: extension.js:331 extension.js:381
+msgid "Manual"
+msgstr "Manuale"
+
+#: extension.js:346 extension.js:381
+#, javascript-format
+msgid "Manual · %d RPM"
+msgstr "Manuale · %d RPM"
+
+#: extension.js:371
+#, javascript-format
+msgid "Auto · %s"
+msgstr "Auto · %s"
+
+#: extension.js:397 extension.js:408 extension.js:444 extension.js:446
+#: extension.js:475
+msgid "NVIDIA GPU"
+msgstr "GPU NVIDIA"
+
+#: extension.js:410
+msgid "Mode at next boot"
+msgstr "Modalità al prossimo avvio"
+
+#: extension.js:426
+msgid "Restart now…"
+msgstr "Riavvia ora…"
+
+#: extension.js:444
+#, javascript-format
+msgid "%s failed with status %d"
+msgstr "%s: errore %d"
+
+#: extension.js:465
+msgid "Powered off"
+msgstr "Spenta"
+
+#: extension.js:467
+msgid "Suspended"
+msgstr "Sospesa"
+
+#: extension.js:467
+msgid "In use"
+msgstr "In uso"
+
+#: extension.js:469 daemon.js:33
+msgid "Always on"
+msgstr "Sempre accesa"
+
+#: extension.js:473
+msgid "Restart required"
+msgstr "Riavvio necessario"
+
+#: extension.js:476
+#, javascript-format
+msgid "Now: %s · changes after restart"
+msgstr "Adesso: %s · cambia al riavvio"
+
+#: prefs.js:26
+msgid "Device"
+msgstr "Dispositivo"
+
+#: prefs.js:28
+msgid "Status"
+msgstr "Stato"
+
+#: prefs.js:30
+msgid "Reapply"
+msgstr "Riapplica"
+
+#: prefs.js:32
+msgid "Send all saved settings to the laptop again"
+msgstr "Reinvia tutte le impostazioni salvate al portatile"
+
+#: prefs.js:38
+msgid "Keyboard Effect"
+msgstr "Effetto tastiera"
+
+#: prefs.js:43
+msgid "Effect"
+msgstr "Effetto"
+
+#: prefs.js:58
+msgid "Primary color"
+msgstr "Colore principale"
+
+#: prefs.js:59
+msgid "Secondary color"
+msgstr "Colore secondario"
+
+#: prefs.js:73
+msgid "Slow"
+msgstr "Lenta"
+
+#: prefs.js:75
+msgid "Fast"
+msgstr "Veloce"
+
+#: prefs.js:81
+msgid "Direction"
+msgstr "Direzione"
+
+#: prefs.js:82
+msgid "Left to right"
+msgstr "Da sinistra a destra"
+
+#: prefs.js:82
+msgid "Right to left"
+msgstr "Da destra a sinistra"
+
+#: prefs.js:87
+msgid "Battery"
+msgstr "Batteria"
+
+#: prefs.js:90
+msgid "Static wave below (%)"
+msgstr "Onda statica sotto il (%)"
+
+#: prefs.js:91
+msgid ""
+"On battery, below this charge Wave turns into Static in the primary color to "
+"save CPU. 0 disables it."
+msgstr "A batteria, sotto questa soglia Onda diventa Statico nel colore principale per risparmiare CPU. 0 disattiva."
+
+#: prefs.js:100
+msgid "The razerbladed service is not running"
+msgstr "Servizio razerbladed non attivo"
+
+#: prefs.js:118
+msgid "Used when the battery is low"
+msgstr "Usato con batteria bassa"
+
+#: daemon.js:15
+msgid "Static"
+msgstr "Statico"
+
+#: daemon.js:16
+msgid "Breathing"
+msgstr "Respiro"
+
+#: daemon.js:17
+msgid "Breathing (two colors)"
+msgstr "Respiro (due colori)"
+
+#: daemon.js:18
+msgid "Breathing (random)"
+msgstr "Respiro (casuale)"
+
+#: daemon.js:19
+msgid "Spectrum"
+msgstr "Spettro"
+
+#: daemon.js:21
+msgid "Wave"
+msgstr "Onda"
+
+#: daemon.js:22
+msgid "Reactive"
+msgstr "Reattivo"
+
+#: daemon.js:23
+msgid "Starlight"
+msgstr "Starlight"
+
+#: daemon.js:27
+msgid "Balanced"
+msgstr "Bilanciato"
+
+#: daemon.js:28
+msgid "Gaming"
+msgstr "Gaming"
+
+#: daemon.js:29
+msgid "Creator"
+msgstr "Creator"
+
+#: daemon.js:35
+msgid "Off (Intel only)"
+msgstr "Spenta (solo Intel)"
+
+#: daemon.js:39
+msgid "Off"
+msgstr "Spento"
