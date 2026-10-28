@@ -104,11 +104,11 @@ DEFAULT_STATE = {
 
 STATE_FILE = Path(GLib.get_user_config_dir()) / 'razerblade' / 'state.json'
 
-BUS_NAME = 'io.github.razerblade.Daemon'
-OBJECT_PATH = '/io/github/razerblade/Daemon'
+BUS_NAME = 'io.github.SymonRod.RazerBladeControl'
+OBJECT_PATH = '/io/github/SymonRod/RazerBladeControl'
 INTERFACE_XML = """
 <node>
-  <interface name="io.github.razerblade.Daemon1">
+  <interface name="io.github.SymonRod.RazerBladeControl1">
     <method name="GetState">
       <arg name="state" type="a{sv}" direction="out"/>
     </method>
@@ -655,7 +655,7 @@ class Daemon:
         except ValueError as e:
             invocation.return_dbus_error('org.freedesktop.DBus.Error.InvalidArgs', str(e))
         except DeviceError as e:
-            invocation.return_dbus_error('io.github.razerblade.Error.Device', str(e))
+            invocation.return_dbus_error('io.github.SymonRod.RazerBladeControl.Error.Device', str(e))
             self.emit_state()
 
     def do_SetEffect(self, effect, options):

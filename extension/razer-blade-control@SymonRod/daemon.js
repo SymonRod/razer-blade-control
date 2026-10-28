@@ -4,9 +4,9 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
-const BUS_NAME = 'io.github.razerblade.Daemon';
-const OBJECT_PATH = '/io/github/razerblade/Daemon';
-const IFACE_NAME = 'io.github.razerblade.Daemon1';
+const BUS_NAME = 'io.github.SymonRod.RazerBladeControl';
+const OBJECT_PATH = '/io/github/SymonRod/RazerBladeControl';
+const IFACE_NAME = 'io.github.SymonRod.RazerBladeControl1';
 
 // Marks labels for xgettext: this module is shared by extension.js and prefs.js,
 // so each of them translates the labels with its own gettext when showing them

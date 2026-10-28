@@ -1,4 +1,4 @@
 [D-BUS Service]
-Name=io.github.razerblade.Daemon
+Name=io.github.SymonRod.RazerBladeControl
 Exec=@BINDIR@/razerbladed
 SystemdService=razerbladed.service

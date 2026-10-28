@@ -47,8 +47,8 @@ GNOME Shell ──D-Bus (session)──▶ razerbladed ──HID feature report�
 - **`extension/razer-blade-control@SymonRod`**: Quick Settings toggles (keyboard, fans, GPU), a keyboard
   brightness slider, an effect speed slider for Wave/Reactive/Starlight, and a preferences window for custom
   colors, speed and direction.
-- **`daemon/razerblade-gpu`** + **`data/io.github.razerblade.gpu.policy`**: root helper started by the extension
-  through `pkexec` (polkit action `io.github.razerblade.gpu`, `auth_admin_keep`) to choose the NVIDIA GPU mode.
+- **`daemon/razerblade-gpu`** + **`data/io.github.symonrod.razerbladecontrol.gpu.policy`**: root helper started by the extension
+  through `pkexec` (polkit action `io.github.symonrod.razerbladecontrol.gpu`, `auth_admin_keep`) to choose the NVIDIA GPU mode.
 
 ## NVIDIA GPU
 
@@ -71,14 +71,14 @@ read again every second while Quick Settings is open. From a terminal:
 ```bash
 razerbladed --probe                  # detect the control interface (read only)
 journalctl --user -u razerbladed -f  # service log
-busctl --user call io.github.razerblade.Daemon /io/github/razerblade/Daemon \
-    io.github.razerblade.Daemon1 GetState
-busctl --user call io.github.razerblade.Daemon /io/github/razerblade/Daemon \
-    io.github.razerblade.Daemon1 SetEffect 'sa{sv}' static 1 color s '#ff0000'
+busctl --user call io.github.SymonRod.RazerBladeControl /io/github/SymonRod/RazerBladeControl \
+    io.github.SymonRod.RazerBladeControl1 GetState
+busctl --user call io.github.SymonRod.RazerBladeControl /io/github/SymonRod/RazerBladeControl \
+    io.github.SymonRod.RazerBladeControl1 SetEffect 'sa{sv}' static 1 color s '#ff0000'
 journalctl /usr/bin/gnome-shell -f   # extension errors
 ```
 
-## D-Bus API (`io.github.razerblade.Daemon1`)
+## D-Bus API (`io.github.SymonRod.RazerBladeControl1`)
 
 | Method | Signature | Notes |
 |---|---|---|

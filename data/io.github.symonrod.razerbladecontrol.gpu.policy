@@ -3,7 +3,7 @@
  "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
 <policyconfig>
   <vendor>Razer Blade Control</vendor>
-  <action id="io.github.razerblade.gpu">
+  <action id="io.github.symonrod.razerbladecontrol.gpu">
     <description>Change the NVIDIA GPU power mode</description>
     <description xml:lang="it">Cambiare la modalità di alimentazione della GPU NVIDIA</description>
     <message>Authentication is required to change the NVIDIA GPU power mode</message>

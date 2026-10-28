@@ -24,14 +24,14 @@ udevadm settle
 
 echo "==> GPU helper and polkit action (needs sudo)"
 sudo install -Dm755 "$SRC/daemon/razerblade-gpu" /usr/local/libexec/razerblade-gpu
-sudo install -Dm644 "$SRC/data/io.github.razerblade.gpu.policy" \
-    /usr/share/polkit-1/actions/io.github.razerblade.gpu.policy
+sudo install -Dm644 "$SRC/data/io.github.symonrod.razerbladecontrol.gpu.policy" \
+    /usr/share/polkit-1/actions/io.github.symonrod.razerbladecontrol.gpu.policy
 
 echo "==> Daemon"
 install -Dm755 "$SRC/daemon/razerbladed.py" "$BINDIR/razerbladed"
 mkdir -p "$UNIT_DIR" "$DBUS_DIR"
 sed "s|@BINDIR@|$BINDIR|g" "$SRC/data/razerbladed.service" > "$UNIT_DIR/razerbladed.service"
-sed "s|@BINDIR@|$BINDIR|g" "$SRC/data/io.github.razerblade.Daemon.service" > "$DBUS_DIR/io.github.razerblade.Daemon.service"
+sed "s|@BINDIR@|$BINDIR|g" "$SRC/data/io.github.SymonRod.RazerBladeControl.service" > "$DBUS_DIR/io.github.SymonRod.RazerBladeControl.service"
 systemctl --user daemon-reload
 systemctl --user enable razerbladed.service
 systemctl --user restart razerbladed.service
