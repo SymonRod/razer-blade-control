@@ -98,7 +98,13 @@ WAVE_PERIODS = (0.6, 0.8, 1.1, 1.5, 2.0, 2.7, 3.6, 4.8, 6.4)
 # Seconds per snake move, indexed by speed - 1
 SNAKE_STEPS = (0.05, 0.065, 0.08, 0.1, 0.125, 0.16, 0.2, 0.25, 0.32)
 SNAKE_START_LENGTH = 3
-SNAKE_TAIL_LEVEL = 0.15  # brightness of the tail; the head is at 1
+# How the snake is painted: gradient from the primary color (head) to the secondary
+# (tail), primary color only, or a rainbow flowing along the body
+SNAKE_STYLES = ('gradient', 'solid', 'rainbow')
+SNAKE_TAIL_LEVEL = 0.15  # brightness of the tail in a single color; the head is at 1
+SNAKE_COLORFUL_TAIL_LEVEL = 0.5  # same for gradient and rainbow, already told apart by color
+SNAKE_RAINBOW_HUE_STEP = 1 / 24  # hue difference between two segments
+SNAKE_RAINBOW_SPEED = 0.25  # hue cycles per second
 SNAKE_WIN_SECONDS = 3.0  # the keyboard blinks this long before a new game
 # Path search through the LEDs: attempts and backtracking steps per attempt
 SNAKE_SEARCH_ATTEMPTS = 50
@@ -116,6 +122,8 @@ DEFAULT_STATE = {
     'last_effect': 'static',
     'color': '#00ff00',
     'color2': '#0000ff',
+    'color3': '#ff0000',  # snake food
+    'style': 'gradient',  # one of SNAKE_STYLES
     'speed': 2,
     'direction': 1,
     'brightness': 160,
@@ -411,8 +419,18 @@ class BladeDevice:
 
 
 def dim(color, level):
-    """RGB bytes of color at a brightness level between 0 and 1."""
+    """RGB bytes of color (or of a row of colors) at a brightness level between 0 and 1."""
     return bytes(round(c * level) for c in color)
+
+
+def mix(a, b, t):
+    """RGB bytes between color a (t = 0) and color b (t = 1)."""
+    return bytes(round(x + (y - x) * t) for x, y in zip(a, b))
+
+
+def hue(h):
+    """RGB bytes of the fully saturated color with hue h (0-1)."""
+    return bytes(round(v * 255) for v in colorsys.hsv_to_rgb(h % 1.0, 1, 1))
 
 
 def led_neighbors(leds):
@@ -628,14 +646,16 @@ class WaveAnimation(Animation):
 
 
 class SnakeAnimation(Animation):
-    """Snake that plays by itself: the primary color is the snake, the secondary the food."""
+    """Snake that plays by itself, painted in one of SNAKE_STYLES; color3 is the food."""
 
     def __init__(self, dev, state, previous, on_error):
         super().__init__(dev, on_error)
         self.interval = SNAKE_STEPS[min(max(state['speed'], 1), len(SNAKE_STEPS)) - 1]
+        self.style = state['style']
         self.color = parse_color(state['color'])
-        self.food_color = parse_color(state['color2'])
-        # Speed and color changes keep the game going
+        self.tail_color = parse_color(state['color2'])
+        self.food_color = parse_color(state['color3'])
+        # Speed, color and style changes keep the game going
         if isinstance(previous, SnakeAnimation):
             self.game, self.won_at = previous.game, previous.won_at
         else:
@@ -663,8 +683,11 @@ class SnakeAnimation(Animation):
         if self.won_at is not None:
             # The snake fills the keyboard: blink it three times
             t = (now - self.won_at) / SNAKE_WIN_SECONDS
-            row = dim(self.color, (1 + math.cos(2 * math.pi * 3 * t)) / 2) * self.cols
-            return [row] * self.rows
+            if self.style == 'rainbow':
+                row = wave_row(self.cols, now * SNAKE_RAINBOW_SPEED, 1)
+            else:
+                row = self.color * self.cols
+            return [dim(row, (1 + math.cos(2 * math.pi * 3 * t)) / 2)] * self.rows
 
         frame = [bytearray(3 * self.cols) for _ in range(self.rows)]
 
@@ -673,14 +696,24 @@ class SnakeAnimation(Animation):
             frame[r][3 * c:3 * c + 3] = color
 
         game = self.game
-        if game.vacated:  # fades out until the next move
-            progress = min((now - self.last_move) / self.interval, 1.0)
-            put(game.vacated, dim(self.color, SNAKE_TAIL_LEVEL * (1 - progress)))
         last = len(game.body) - 1
+        if game.vacated:  # painted like the tail, fading out until the next move
+            progress = min((now - self.last_move) / self.interval, 1.0)
+            put(game.vacated, dim(self.segment_color(-1, last, now), 1 - progress))
         for i, cell in enumerate(game.body):
-            put(cell, dim(self.color, SNAKE_TAIL_LEVEL + (1 - SNAKE_TAIL_LEVEL) * i / last))
+            put(cell, self.segment_color(i, last, now))
         put(game.food, dim(self.food_color, 0.6 + 0.4 * math.cos(2 * math.pi * now)))
         return [bytes(row) for row in frame]
+
+    def segment_color(self, i, last, now):
+        """Color of body segment i, from 0 (tail) to last (head)."""
+        t = max(i, 0) / last
+        if self.style == 'solid':
+            return dim(self.color, SNAKE_TAIL_LEVEL + (1 - SNAKE_TAIL_LEVEL) * t)
+        level = SNAKE_COLORFUL_TAIL_LEVEL + (1 - SNAKE_COLORFUL_TAIL_LEVEL) * t
+        if self.style == 'rainbow':
+            return dim(hue(now * SNAKE_RAINBOW_SPEED - (last - i) * SNAKE_RAINBOW_HUE_STEP), level)
+        return dim(mix(self.tail_color, self.color, t), level)
 
 
 ANIMATIONS = {'wave': WaveAnimation, 'snake': SnakeAnimation}
@@ -895,6 +928,8 @@ class Daemon:
             'last-effect': GLib.Variant('s', s['last_effect']),
             'color': GLib.Variant('s', s['color']),
             'color2': GLib.Variant('s', s['color2']),
+            'color3': GLib.Variant('s', s['color3']),
+            'style': GLib.Variant('s', s['style']),
             'speed': GLib.Variant('y', s['speed']),
             'direction': GLib.Variant('y', s['direction']),
             'brightness': GLib.Variant('y', s['brightness']),
@@ -940,10 +975,14 @@ class Daemon:
         if effect not in EFFECTS:
             raise ValueError(f'unknown effect: {effect}')
         new = dict(self.state)
-        for key in ('color', 'color2'):
+        for key in ('color', 'color2', 'color3'):
             if key in options:
                 parse_color(options[key])
                 new[key] = '#' + options[key].strip().lstrip('#').lower()
+        if 'style' in options:
+            if options['style'] not in SNAKE_STYLES:
+                raise ValueError(f'unknown style: {options["style"]}')
+            new['style'] = options['style']
         for key in ('speed', 'direction'):
             if key in options:
                 new[key] = int(options[key])

@@ -11,7 +11,7 @@ import {Slider} from 'resource:///org/gnome/shell/ui/slider.js';
 import {QuickMenuToggle, QuickSlider, SystemIndicator} from 'resource:///org/gnome/shell/ui/quickSettings.js';
 import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
 
-import {DaemonClient, EFFECTS, GPU_MODES, POWER_MODES, effectInfo} from './daemon.js';
+import {DaemonClient, EFFECTS, GPU_MODES, POWER_MODES, effectColors, effectInfo} from './daemon.js';
 
 Gio._promisify(Gio.Subprocess.prototype, 'communicate_utf8_async');
 
@@ -221,7 +221,8 @@ class KeyboardToggle extends QuickMenuToggle {
         const s = this._client.state;
         if (!s)
             return;
-        const effect = effectInfo(s.effect).usesColor ? s.effect : 'static';
+        // Keep the effect if it paints the primary color, otherwise show the color as Static
+        const effect = 'color' in effectColors(effectInfo(s.effect), s.style) ? s.effect : 'static';
         this._client.setEffect(effect, {color});
     }
 

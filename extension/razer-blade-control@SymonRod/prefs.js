@@ -5,7 +5,7 @@ import Gtk from 'gi://Gtk';
 
 import {ExtensionPreferences, gettext as _} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
-import {DaemonClient, EFFECTS, effectInfo} from './daemon.js';
+import {DaemonClient, EFFECTS, effectColors, effectInfo} from './daemon.js';
 
 function hexToRgba(hex) {
     const rgba = new Gdk.RGBA();
@@ -46,6 +46,12 @@ export default class RazerBladePreferences extends ExtensionPreferences {
         });
         effectGroup.add(effectRow);
 
+        // Filled in with the styles of the selected effect, if it has any
+        const styleRow = new Adw.ComboRow({title: _('Style')});
+        effectGroup.add(styleRow);
+        const noStyles = [];
+        let styles = noStyles;
+
         const makeColorRow = title => {
             const button = new Gtk.ColorDialogButton({
                 dialog: new Gtk.ColorDialog({with_alpha: false}),
@@ -58,6 +64,9 @@ export default class RazerBladePreferences extends ExtensionPreferences {
         };
         const [colorRow, colorButton] = makeColorRow(_('Primary color'));
         const [color2Row, color2Button] = makeColorRow(_('Secondary color'));
+        const [color3Row, color3Button] = makeColorRow('');
+        const colorRows = [['color', colorRow, colorButton], ['color2', color2Row, color2Button],
+            ['color3', color3Row, color3Button]];
 
         // Speed 1 is the fastest: the inverted scale puts it on the right
         const speedScale = new Gtk.Scale({
@@ -108,17 +117,29 @@ export default class RazerBladePreferences extends ExtensionPreferences {
             if (available) {
                 const info = effectInfo(state.effect);
                 effectRow.selected = Math.max(effectIds.indexOf(state.effect), 0);
-                colorButton.rgba = hexToRgba(state.color);
-                color2Button.rgba = hexToRgba(state.color2);
+                if ((info.styles ?? noStyles) !== styles) {
+                    styles = info.styles ?? noStyles;
+                    styleRow.model = Gtk.StringList.new(styles.map(s => _(s.label)));
+                }
+                styleRow.visible = styles.length > 0;
+                styleRow.selected = Math.max(styles.findIndex(s => s.id === state.style), 0);
+                const colors = effectColors(info, state.style);
+                for (const [key, row, button] of colorRows) {
+                    button.rgba = hexToRgba(state[key]);
+                    row.visible = key in colors;
+                    row.title = key in colors ? _(colors[key]) : '';
+                    row.subtitle = '';
+                }
+                // Animations that don't paint the primary color still use it when the
+                // battery saver turns them static
+                if (info.streamed && !('color' in colors)) {
+                    colorRow.visible = true;
+                    colorRow.title = _('Primary color');
+                    colorRow.subtitle = _('Used when the battery is low');
+                }
                 speedScale.adjustment.upper = info.maxSpeed ?? 4;
                 speedScale.set_value(state.speed);
                 directionRow.selected = state.direction - 1;
-                // Animations without a color of their own use the main one when the
-                // battery saver turns them static
-                const savedOnly = !!info.streamed && !info.usesColor;
-                colorRow.visible = !!info.usesColor || savedOnly;
-                colorRow.subtitle = savedOnly ? _('Used when the battery is low') : '';
-                color2Row.visible = !!info.usesColor2;
                 speedRow.visible = !!info.usesSpeed;
                 directionRow.visible = !!info.usesDirection;
             }
@@ -133,8 +154,13 @@ export default class RazerBladePreferences extends ExtensionPreferences {
             client.setEffect(effectIds[effectRow.selected], options);
         };
         effectRow.connect('notify::selected', () => apply());
-        colorButton.connect('notify::rgba', () => apply({color: rgbaToHex(colorButton.rgba)}));
-        color2Button.connect('notify::rgba', () => apply({color2: rgbaToHex(color2Button.rgba)}));
+        styleRow.connect('notify::selected', () => {
+            const style = styles[styleRow.selected]?.id;
+            if (style && style !== client.state?.style)
+                apply({style});
+        });
+        for (const [key, , button] of colorRows)
+            button.connect('notify::rgba', () => apply({[key]: rgbaToHex(button.rgba)}));
         speedScale.connect('value-changed', () => {
             const speed = Math.round(speedScale.get_value());
             if (speed !== client.state?.speed)

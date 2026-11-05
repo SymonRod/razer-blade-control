@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: razer-blade-control\n"
 "Report-Msgid-Bugs-To: https://github.com/SymonRod/razer-blade-control/"
 "issues\n"
-"POT-Creation-Date: 2026-11-05 22:56+0100\n"
+"POT-Creation-Date: 2026-11-05 22:52+0100\n"
 "PO-Revision-Date: 2026-10-28 20:07+0100\n"
 "Last-Translator: SymonRod\n"
 "Language-Team: Italian\n"
@@ -35,7 +35,7 @@ msgstr "Niente HDMI, USB-C della GPU e CUDA"
 msgid "Service not running"
 msgstr "Servizio non attivo"
 
-#: extension.js:76 prefs.js:102
+#: extension.js:76 prefs.js:111
 msgid "Device not accessible"
 msgstr "Dispositivo non accessibile"
 
@@ -43,7 +43,7 @@ msgstr "Dispositivo non accessibile"
 msgid "Keyboard"
 msgstr "Tastiera"
 
-#: extension.js:153 extension.js:248 extension.js:263
+#: extension.js:153 extension.js:249 extension.js:264
 msgid "RGB Keyboard"
 msgstr "Tastiera RGB"
 
@@ -51,7 +51,7 @@ msgstr "Tastiera RGB"
 msgid "Color"
 msgstr "Colore"
 
-#: extension.js:190 prefs.js:77
+#: extension.js:190 prefs.js:86
 msgid "Speed"
 msgstr "Velocità"
 
@@ -67,92 +67,92 @@ msgstr "Logo Razer"
 msgid "Custom colors and more options…"
 msgstr "Colori personalizzati e altre opzioni…"
 
-#: extension.js:256
+#: extension.js:257
 msgid "Static · low battery"
 msgstr "Statico · batteria bassa"
 
-#: extension.js:261
+#: extension.js:262
 #, javascript-format
 msgid "Low battery: Static instead of %s to save power"
 msgstr "Batteria bassa: Statico al posto di %s per risparmiare energia"
 
-#: extension.js:289
+#: extension.js:290
 msgid "Keyboard brightness"
 msgstr "Luminosità tastiera"
 
-#: extension.js:314
+#: extension.js:315
 msgid "Fans"
 msgstr "Ventole"
 
-#: extension.js:328 extension.js:376 extension.js:387
+#: extension.js:329 extension.js:377 extension.js:388
 msgid "Fans and Performance"
 msgstr "Ventole e prestazioni"
 
-#: extension.js:331
+#: extension.js:332
 msgid "Profile"
 msgstr "Profilo"
 
-#: extension.js:340 extension.js:351
+#: extension.js:341 extension.js:352
 msgid "Fan speed"
 msgstr "Velocità ventole"
 
-#: extension.js:341 daemon.js:38
+#: extension.js:342 daemon.js:48
 msgid "Automatic"
 msgstr "Automatica"
 
-#: extension.js:345 extension.js:395
+#: extension.js:346 extension.js:396
 msgid "Manual"
 msgstr "Manuale"
 
-#: extension.js:360 extension.js:395
+#: extension.js:361 extension.js:396
 #, javascript-format
 msgid "Manual · %d RPM"
 msgstr "Manuale · %d RPM"
 
-#: extension.js:385
+#: extension.js:386
 #, javascript-format
 msgid "Auto · %s"
 msgstr "Auto · %s"
 
-#: extension.js:411 extension.js:422 extension.js:458 extension.js:460
-#: extension.js:489
+#: extension.js:412 extension.js:423 extension.js:459 extension.js:461
+#: extension.js:490
 msgid "NVIDIA GPU"
 msgstr "GPU NVIDIA"
 
-#: extension.js:424
+#: extension.js:425
 msgid "Mode at next boot"
 msgstr "Modalità al prossimo avvio"
 
-#: extension.js:440
+#: extension.js:441
 msgid "Restart now…"
 msgstr "Riavvia ora…"
 
-#: extension.js:458
+#: extension.js:459
 #, javascript-format
 msgid "%s failed with status %d"
 msgstr "%s: errore %d"
 
-#: extension.js:479
+#: extension.js:480
 msgid "Powered off"
 msgstr "Spenta"
 
-#: extension.js:481
+#: extension.js:482
 msgid "Suspended"
 msgstr "Sospesa"
 
-#: extension.js:481
+#: extension.js:482
 msgid "In use"
 msgstr "In uso"
 
-#: extension.js:483 daemon.js:37
+#: extension.js:484 daemon.js:47
 msgid "Always on"
 msgstr "Sempre accesa"
 
-#: extension.js:487
+#: extension.js:488
 msgid "Restart required"
 msgstr "Riavvio necessario"
 
-#: extension.js:490
+#: extension.js:491
 #, javascript-format
 msgid "Now: %s · changes after restart"
 msgstr "Adesso: %s · cambia al riavvio"
@@ -181,43 +181,47 @@ msgstr "Effetto tastiera"
 msgid "Effect"
 msgstr "Effetto"
 
-#: prefs.js:59
+#: prefs.js:50
+msgid "Style"
+msgstr "Stile"
+
+#: prefs.js:65 prefs.js:137 daemon.js:68
 msgid "Primary color"
 msgstr "Colore principale"
 
-#: prefs.js:60
+#: prefs.js:66 daemon.js:70
 msgid "Secondary color"
 msgstr "Colore secondario"
 
-#: prefs.js:74
+#: prefs.js:83
 msgid "Slow"
 msgstr "Lenta"
 
-#: prefs.js:76
+#: prefs.js:85
 msgid "Fast"
 msgstr "Veloce"
 
-#: prefs.js:82
+#: prefs.js:91
 msgid "Direction"
 msgstr "Direzione"
 
-#: prefs.js:83
+#: prefs.js:92
 msgid "Left to right"
 msgstr "Da sinistra a destra"
 
-#: prefs.js:83
+#: prefs.js:92
 msgid "Right to left"
 msgstr "Da destra a sinistra"
 
-#: prefs.js:88
+#: prefs.js:97
 msgid "Battery"
 msgstr "Batteria"
 
-#: prefs.js:91
+#: prefs.js:100
 msgid "Static animations below (%)"
 msgstr "Animazioni statiche sotto il (%)"
 
-#: prefs.js:92
+#: prefs.js:101
 msgid ""
 "On battery, below this charge Wave and Snake turn into Static in the primary "
 "color to save CPU. 0 disables it."
@@ -225,11 +229,11 @@ msgstr ""
 "A batteria, sotto questa soglia Onda e Snake diventano Statico nel colore "
 "principale per risparmiare CPU. 0 disattiva."
 
-#: prefs.js:101
+#: prefs.js:110
 msgid "The razerbladed service is not running"
 msgstr "Servizio razerbladed non attivo"
 
-#: prefs.js:120
+#: prefs.js:138
 msgid "Used when the battery is low"
 msgstr "Usato con batteria bassa"
 
@@ -261,22 +265,58 @@ msgstr "Onda"
 msgid "Snake"
 msgstr "Snake"
 
-#: daemon.js:31
+#: daemon.js:29
+msgid "Gradient"
+msgstr "Gradiente"
+
+#: daemon.js:30
+msgid "Head color"
+msgstr "Colore della testa"
+
+#: daemon.js:30
+msgid "Tail color"
+msgstr "Colore della coda"
+
+#: daemon.js:30 daemon.js:32 daemon.js:33
+msgid "Food color"
+msgstr "Colore del cibo"
+
+#: daemon.js:32
+msgid "Single color"
+msgstr "Colore singolo"
+
+#: daemon.js:32
+msgid "Snake color"
+msgstr "Colore del serpente"
+
+#: daemon.js:33
+msgid "Rainbow"
+msgstr "Arcobaleno"
+
+#: daemon.js:36
+msgid "Reactive"
+msgstr "Reattivo"
+
+#: daemon.js:37
+msgid "Starlight"
+msgstr "Starlight"
+
+#: daemon.js:41
 msgid "Balanced"
 msgstr "Bilanciato"
 
-#: daemon.js:32
+#: daemon.js:42
 msgid "Gaming"
 msgstr "Gaming"
 
-#: daemon.js:33
+#: daemon.js:43
 msgid "Creator"
 msgstr "Creator"
 
-#: daemon.js:39
+#: daemon.js:49
 msgid "Off (Intel only)"
 msgstr "Spenta (solo Intel)"
 
-#: daemon.js:43
+#: daemon.js:53
 msgid "Off"
 msgstr "Spento"

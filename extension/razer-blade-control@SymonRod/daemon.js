@@ -22,9 +22,19 @@ export const EFFECTS = [
     // maxSpeed matches len(WAVE_PERIODS) and len(SNAKE_STEPS)
     {id: 'wave', label: N_('Wave'), usesDirection: true, usesSpeed: true, maxSpeed: 9, streamed: true},
     {
-        id: 'snake', label: N_('Snake'), usesColor: true, usesColor2: true,
-        usesSpeed: true, maxSpeed: 9, streamed: true,
+        id: 'snake', label: N_('Snake'), usesSpeed: true, maxSpeed: 9, streamed: true,
+        // Matches SNAKE_STYLES; colors: the ones each style paints, with their titles
+        styles: [
+            {
+                id: 'gradient', label: N_('Gradient'),
+                colors: {color: N_('Head color'), color2: N_('Tail color'), color3: N_('Food color')},
+            },
+            {id: 'solid', label: N_('Single color'), colors: {color: N_('Snake color'), color3: N_('Food color')}},
+            {id: 'rainbow', label: N_('Rainbow'), colors: {color3: N_('Food color')}},
+        ],
     },
+    {id: 'reactive', label: N_('Reactive'), usesColor: true, usesSpeed: true, maxSpeed: 4},
+    {id: 'starlight', label: N_('Starlight'), usesColor: true, usesSpeed: true, maxSpeed: 3},
 ];
 
 export const POWER_MODES = {
@@ -43,6 +53,23 @@ export function effectInfo(id) {
     return EFFECTS.find(e => e.id === id) ?? {id, label: id === 'none' ? N_('Off') : id};
 }
 
+/**
+ * The colors an effect paints with the given style, mapped to their (untranslated) titles.
+ *
+ * @param {object} info from effectInfo()
+ * @param {string} style
+ * @returns {{color?: string, color2?: string, color3?: string}}
+ */
+export function effectColors(info, style) {
+    if (info.styles)
+        return (info.styles.find(s => s.id === style) ?? info.styles[0]).colors;
+    const colors = {};
+    if (info.usesColor)
+        colors.color = N_('Primary color');
+    if (info.usesColor2)
+        colors.color2 = N_('Secondary color');
+    return colors;
+}
 
 export class DaemonClient {
     /**
@@ -119,11 +146,12 @@ export class DaemonClient {
 
     /**
      * @param {string} effect
-     * @param {{color?: string, color2?: string, speed?: number, direction?: number}} options
+     * @param {{color?: string, color2?: string, color3?: string, style?: string,
+     *     speed?: number, direction?: number}} options
      */
     setEffect(effect, options = {}) {
         const opts = {};
-        for (const key of ['color', 'color2'])
+        for (const key of ['color', 'color2', 'color3', 'style'])
             if (key in options)
                 opts[key] = new GLib.Variant('s', options[key]);
         for (const key of ['speed', 'direction'])

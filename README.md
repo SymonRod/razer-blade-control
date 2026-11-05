@@ -83,7 +83,7 @@ journalctl /usr/bin/gnome-shell -f   # extension errors
 | Method | Signature | Notes |
 |---|---|---|
 | `GetState` | `→ a{sv}` | full state, including `connected`, `error` and `gpu-available`, `gpu-mode`, `gpu-booted-mode`, `gpu-power` |
-| `SetEffect` | `s, a{sv}` | effects: `none static breathing breathing-dual breathing-random spectrum wave snake reactive starlight`; options `color`, `color2` (`#rrggbb`), `speed`, `direction` |
+| `SetEffect` | `s, a{sv}` | effects: `none static breathing breathing-dual breathing-random spectrum wave snake reactive starlight`; options `color`, `color2`, `color3` (`#rrggbb`), `style` (snake: `gradient solid rainbow`), `speed`, `direction` |
 | `SetBrightness` | `y` | 0–255 |
 | `SetLogo` | `b` | lid logo |
 | `SetPowerMode` | `s` | `balanced`, `gaming`, `creator` |
@@ -106,8 +106,9 @@ request waits for the firmware's acknowledgement, because a request that arrives
 silently dropped (~3% of one core). A full wave cycle is pregenerated on every speed/direction change. The snake
 plays by itself: it follows a Hamiltonian cycle of the 6×16 matrix and takes shortcuts towards the food only
 where they can't trap it, so it always fills the keyboard; then the keyboard blinks and a new game starts.
-Primary color: snake, secondary color: food. It moves only on the matrix cells that have an LED (`leds` in
-`SUPPORTED_DEVICES`), jumping over wide keys and gaps. Animations stop at brightness 0, during suspend and with any other
+The snake is painted as a gradient from the primary color (head) to the secondary (tail), in the primary color
+only, or as a rainbow flowing along its body; `color3` is the food. It moves only on the matrix cells that have
+an LED (`leds` in `SUPPORTED_DEVICES`), jumping over wide keys and gaps. Animations stop at brightness 0, during suspend and with any other
 effect, which the EC handles at no cost. On battery, below `battery_threshold` (default 20%, `0` disables it;
 read from UPower) they temporarily become Static in the primary color and come back by themselves on AC power
 or above the threshold. New animations subclass `Animation` in `razerbladed.py` and go in `ANIMATIONS`.
