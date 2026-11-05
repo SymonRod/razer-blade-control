@@ -14,10 +14,14 @@ razer-laptop-control (razer_control_gui/src/daemon/device.rs).
 import argparse
 import colorsys
 import fcntl
+import functools
 import json
 import logging
+import math
 import os
+import random
 import time
+from collections import deque
 from pathlib import Path
 
 import gi
@@ -40,6 +44,15 @@ SUPPORTED_DEVICES = {
         'power_modes': ['balanced', 'gaming', 'creator'],
         'logo': True,
         'matrix': (6, 16),  # rows, columns
+        # Matrix cells with an LED ('#') on the UK (ISO) keyboard; wide keys use one cell
+        'leds': (
+            '.###############',  # esc f1-f12 ins del
+            '.#############.#',  # ` 1-0 - = backspace
+            '.##############.',  # tab q-p [ ] enter (top half)
+            '.#############..',  # caps a-l ; ' #
+            '.#############.#',  # shift \ z-m , . / up shift
+            '.###.#...#.#####',  # ctrl fn super alt altgr ctrl left down right fn (space: no LED)
+        ),
     },
 }
 
@@ -69,18 +82,27 @@ EFFECT_STATIC = 0x06
 EFFECT_STARLIGHT = 0x19
 
 EFFECTS = ['none', 'static', 'breathing', 'breathing-dual', 'breathing-random',
-           'spectrum', 'wave', 'reactive', 'starlight']
+           'spectrum', 'wave', 'snake', 'reactive', 'starlight']
 
 NOSTORE = 0x00
 VARSTORE = 0x01
 LOGO_LED = 0x04
 
-# The EC's own wave has a fixed speed, so the wave is streamed as custom frames.
-WAVE_FPS = 20
+# Animations computed here are streamed as custom frames; the EC's own wave has a
+# fixed speed, so the wave is one of them. A frame takes ~10 ms to be acknowledged.
+ANIMATION_FPS = 20
 # A frame request is usually acknowledged within 1-2 ms, rarely after ~10 ms
 FRAME_ACK_TIMEOUT = 0.02
 # Seconds for the rainbow to cross the keyboard, indexed by speed - 1 (1 is the fastest)
 WAVE_PERIODS = (0.6, 0.8, 1.1, 1.5, 2.0, 2.7, 3.6, 4.8, 6.4)
+# Seconds per snake move, indexed by speed - 1
+SNAKE_STEPS = (0.05, 0.065, 0.08, 0.1, 0.125, 0.16, 0.2, 0.25, 0.32)
+SNAKE_START_LENGTH = 3
+SNAKE_TAIL_LEVEL = 0.15  # brightness of the tail; the head is at 1
+SNAKE_WIN_SECONDS = 3.0  # the keyboard blinks this long before a new game
+# Path search through the LEDs: attempts and backtracking steps per attempt
+SNAKE_SEARCH_ATTEMPTS = 50
+SNAKE_SEARCH_STEPS = 3000
 
 NVIDIA_VENDOR = '0x10de'
 GPU_CONFIG = Path('/etc/modprobe.d/razerblade-gpu.conf')  # written by razerblade-gpu
@@ -101,7 +123,7 @@ DEFAULT_STATE = {
     'power': 'balanced',
     'fan_rpm': 0,
     'last_fan_rpm': 4000,
-    'battery_threshold': 20,  # below this percentage, on battery, the wave becomes static
+    'battery_threshold': 20,  # below this percentage, on battery, animations become static
 }
 
 STATE_FILE = Path(GLib.get_user_config_dir()) / 'razerblade' / 'state.json'
@@ -388,32 +410,188 @@ class BladeDevice:
                 self.send(0x0D, 0x01, 0x03, [0x00, zone, fan_rpm // 100])
 
 
-class WaveAnimation:
-    """Rainbow wave streamed to the keyboard; one full cycle of requests is prebuilt."""
+def dim(color, level):
+    """RGB bytes of color at a brightness level between 0 and 1."""
+    return bytes(round(c * level) for c in color)
 
-    def __init__(self, dev, speed, direction, phase, on_error):
-        self.dev = dev
-        self.on_error = on_error
-        self.period = WAVE_PERIODS[min(max(speed, 1), len(WAVE_PERIODS)) - 1]
-        rows, cols = dev.info['matrix']
-        count = round(self.period * WAVE_FPS)
-        self.frames = [dev.custom_frame_requests([wave_row(cols, i / count, direction)] * rows)
-                       for i in range(count)]
-        # Start from the given phase so speed changes don't make the wave jump
-        self.start = time.monotonic() - phase * self.period
-        self.source_id = 0
+
+def led_neighbors(leds):
+    """Neighbors of every matrix cell with an LED: the nearest LED up, down, left and
+    right, so that a move crosses wide keys and gaps in the matrix in one go."""
+    rows, cols = len(leds), len(leds[0])
+    lit = {(r, c) for r in range(rows) for c in range(cols) if leds[r][c] == '#'}
+    neighbors = {}
+    for r, c in sorted(lit):
+        near = []
+        for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            nr, nc = r + dr, c + dc
+            while 0 <= nr < rows and 0 <= nc < cols and (nr, nc) not in lit:
+                nr, nc = nr + dr, nc + dc
+            if (nr, nc) in lit:
+                near.append((nr, nc))
+        neighbors[(r, c)] = near
+    return neighbors
+
+
+def hamiltonian_cycle(neighbors):
+    """A closed path through every cell once, or None if the search gives up.
+
+    Depth-first search that backtracks as soon as the free cells are no longer
+    connected or one of them is left with fewer than two ways in and out. Some
+    neighbor orders lead it astray for a very long time, so it makes short attempts
+    with the neighbors shuffled differently: fixed seeds keep the result the same.
+    """
+    start = min(neighbors, key=lambda cell: (len(neighbors[cell]), cell))
+
+    def exits(cell, head, visited):
+        return sum(1 for n in graph[cell] if n not in visited or n == head or n == start)
+
+    def viable(head, visited):
+        free = [cell for cell in graph if cell not in visited]
+        if not free:
+            return start in graph[head]
+        if not any(n not in visited for n in graph[start]):
+            return False
+        if any(exits(cell, head, visited) < 2 for cell in free):
+            return False
+        seen, todo = {head}, [head]
+        while todo:
+            for n in graph[todo.pop()]:
+                if n not in visited and n not in seen:
+                    seen.add(n)
+                    todo.append(n)
+        return len(seen) - 1 == len(free)
+
+    def extend(path, visited):
+        nonlocal steps
+        steps += 1
+        head = path[-1]
+        if len(path) == len(graph):
+            return start in graph[head]
+        if steps > SNAKE_SEARCH_STEPS:
+            return False
+        moves = [n for n in graph[head] if n not in visited]
+        for n in sorted(moves, key=lambda n: exits(n, head, visited)):
+            visited.add(n)
+            path.append(n)
+            if viable(n, visited) and extend(path, visited):
+                return True
+            visited.discard(n)
+            path.pop()
+        return False
+
+    for seed in range(SNAKE_SEARCH_ATTEMPTS):
+        rng = random.Random(seed)
+        graph = {cell: rng.sample(near, len(near)) for cell, near in neighbors.items()}
+        steps = 0
+        path = [start]
+        if extend(path, {start}):
+            return path
+    return None
+
+
+@functools.cache
+def snake_board(leds):
+    """(cycle, neighbors) for the snake on the cells with an LED, computed once."""
+    neighbors = led_neighbors(leds)
+    cycle = hamiltonian_cycle(neighbors)
+    if cycle is not None:
+        return cycle, neighbors
+    full = ('#' * len(leds[0]),) * len(leds)
+    if leds == full:
+        raise RuntimeError('no snake path through the keyboard matrix')
+    log.warning('no snake path through the LEDs, using the whole matrix')
+    return snake_board(full)
+
+
+class SnakeGame:
+    """Snake that follows a Hamiltonian cycle, cutting it short towards the food when safe.
+
+    Every move goes forward along the cycle, so the body lies on the stretch of cycle from
+    the tail to the head and the cells from the head on to the tail are all free: a move
+    that stays among them can never trap the snake, so it always fills the whole board.
+    """
+
+    def __init__(self, leds):
+        self.cycle, self.neighbors = snake_board(leds)
+        self.order = {cell: i for i, cell in enumerate(self.cycle)}
+        self.reset()
+
+    def reset(self):
+        start = random.randrange(len(self.cycle))
+        self.body = deque(self.cycle[(start + i) % len(self.cycle)]
+                          for i in range(SNAKE_START_LENGTH))  # tail first
+        self.occupied = set(self.body)
+        self.vacated = None  # cell the tail left on the last move
+        self.place_food()
 
     @property
-    def phase(self):
-        return (time.monotonic() - self.start) / self.period % 1.0
+    def won(self):
+        return self.food is None
+
+    def distance(self, a, b):
+        """Moves from a to b going forward along the cycle."""
+        return (self.order[b] - self.order[a]) % len(self.cycle)
+
+    def place_food(self):
+        free = [cell for cell in self.cycle if cell not in self.occupied]
+        self.food = random.choice(free) if free else None
+
+    def next_cell(self):
+        head = self.body[-1]
+        best = self.cycle[(self.order[head] + 1) % len(self.cycle)]
+        best_distance = 1
+        # Cells closer than the tail are free; eating keeps the tail in place for one
+        # move, which still leaves the head at least one cell away from it.
+        room = self.distance(head, self.body[0])
+        to_food = self.distance(head, self.food)
+        for cell in self.neighbors[head]:
+            d = self.distance(head, cell)
+            if best_distance < d < room and d <= to_food:
+                best, best_distance = cell, d
+        return best
+
+    def step(self):
+        cell = self.next_cell()
+        ate = cell == self.food
+        if ate:
+            self.vacated = None
+        else:
+            self.vacated = self.body.popleft()
+            self.occupied.discard(self.vacated)
+        self.body.append(cell)
+        self.occupied.add(cell)
+        if ate:
+            self.place_food()
+
+
+class Animation:
+    """Effect computed by the daemon and streamed to the keyboard as custom frames.
+
+    Subclasses take (dev, state, previous, on_error), where previous is the animation
+    being replaced (or None) so that, for example, a speed change doesn't restart it.
+    """
+
+    def __init__(self, dev, on_error):
+        self.dev = dev
+        self.on_error = on_error
+        self.rows, self.cols = dev.info['matrix']
+        self.source_id = 0
+
+    def render(self, now):
+        """The frame to show at time now: one bytes object of RGB triplets per row."""
+        raise NotImplementedError
+
+    def frame_requests(self, now):
+        return self.dev.custom_frame_requests(self.render(now))
 
     def show(self):
-        for request in self.frames[int(self.phase * len(self.frames)) % len(self.frames)]:
+        for request in self.frame_requests(time.monotonic()):
             self.dev.write(request)
 
     def set_running(self, running):
         if running and not self.source_id:
-            self.source_id = GLib.timeout_add(1000 // WAVE_FPS, self.on_tick)
+            self.source_id = GLib.timeout_add(1000 // ANIMATION_FPS, self.on_tick)
         elif not running and self.source_id:
             GLib.source_remove(self.source_id)
             self.source_id = 0
@@ -428,11 +606,91 @@ class WaveAnimation:
         return GLib.SOURCE_CONTINUE
 
 
+class WaveAnimation(Animation):
+    """Rainbow wave; one full cycle of requests is prebuilt."""
+
+    def __init__(self, dev, state, previous, on_error):
+        super().__init__(dev, on_error)
+        self.period = WAVE_PERIODS[min(max(state['speed'], 1), len(WAVE_PERIODS)) - 1]
+        count = round(self.period * ANIMATION_FPS)
+        self.frames = [dev.custom_frame_requests(
+                           [wave_row(self.cols, i / count, state['direction'])] * self.rows)
+                       for i in range(count)]
+        # Continue from the previous wave so speed changes don't make it jump
+        phase = previous.phase(time.monotonic()) if isinstance(previous, WaveAnimation) else 0.0
+        self.start = time.monotonic() - phase * self.period
+
+    def phase(self, now):
+        return (now - self.start) / self.period % 1.0
+
+    def frame_requests(self, now):
+        return self.frames[int(self.phase(now) * len(self.frames)) % len(self.frames)]
+
+
+class SnakeAnimation(Animation):
+    """Snake that plays by itself: the primary color is the snake, the secondary the food."""
+
+    def __init__(self, dev, state, previous, on_error):
+        super().__init__(dev, on_error)
+        self.interval = SNAKE_STEPS[min(max(state['speed'], 1), len(SNAKE_STEPS)) - 1]
+        self.color = parse_color(state['color'])
+        self.food_color = parse_color(state['color2'])
+        # Speed and color changes keep the game going
+        if isinstance(previous, SnakeAnimation):
+            self.game, self.won_at = previous.game, previous.won_at
+        else:
+            leds = dev.info.get('leds') or ('#' * self.cols,) * self.rows
+            self.game, self.won_at = SnakeGame(leds), None
+        self.last_move = time.monotonic()
+
+    def advance(self, now):
+        if now - self.last_move > 1.0:  # paused meanwhile: don't replay the missed moves
+            self.last_move = now
+        while not self.game.won and now - self.last_move >= self.interval:
+            self.game.step()
+            self.last_move += self.interval
+        if not self.game.won:
+            return
+        if self.won_at is None:
+            self.won_at = now
+        elif now - self.won_at >= SNAKE_WIN_SECONDS:
+            self.game.reset()
+            self.won_at = None
+            self.last_move = now
+
+    def render(self, now):
+        self.advance(now)
+        if self.won_at is not None:
+            # The snake fills the keyboard: blink it three times
+            t = (now - self.won_at) / SNAKE_WIN_SECONDS
+            row = dim(self.color, (1 + math.cos(2 * math.pi * 3 * t)) / 2) * self.cols
+            return [row] * self.rows
+
+        frame = [bytearray(3 * self.cols) for _ in range(self.rows)]
+
+        def put(cell, color):
+            r, c = cell
+            frame[r][3 * c:3 * c + 3] = color
+
+        game = self.game
+        if game.vacated:  # fades out until the next move
+            progress = min((now - self.last_move) / self.interval, 1.0)
+            put(game.vacated, dim(self.color, SNAKE_TAIL_LEVEL * (1 - progress)))
+        last = len(game.body) - 1
+        for i, cell in enumerate(game.body):
+            put(cell, dim(self.color, SNAKE_TAIL_LEVEL + (1 - SNAKE_TAIL_LEVEL) * i / last))
+        put(game.food, dim(self.food_color, 0.6 + 0.4 * math.cos(2 * math.pi * now)))
+        return [bytes(row) for row in frame]
+
+
+ANIMATIONS = {'wave': WaveAnimation, 'snake': SnakeAnimation}
+
+
 class Daemon:
     def __init__(self, bus):
         self.bus = bus
         self.device = None
-        self.wave = None
+        self.animation = None
         self.upower = None
         self.battery_saver = False
         self.last_error = ''
@@ -479,7 +737,7 @@ class Daemon:
         return self.device is not None
 
     def close_device(self):
-        self.stop_wave()
+        self.stop_animation()
         if self.device:
             self.device.close()
             self.device = None
@@ -510,37 +768,37 @@ class Daemon:
 
     def apply_effect(self, dev):
         s = self.state
-        phase = self.stop_wave()
+        previous = self.stop_animation()
         effect = s['effect']
-        if effect == 'wave' and self.battery_saver:
-            effect = 'static'  # streaming frames costs CPU, the EC's static effect doesn't
-        if effect != 'wave':
+        animation = ANIMATIONS.get(effect)
+        if animation and self.battery_saver:
+            # Streaming frames costs CPU, the EC's static effect doesn't
+            animation, effect = None, 'static'
+        if not animation:
             dev.set_effect(effect, parse_color(s['color']), parse_color(s['color2']),
                            s['speed'], s['direction'])
             return
-        self.wave = WaveAnimation(dev, s['speed'], s['direction'], phase, self.on_wave_error)
-        self.wave.show()
+        self.animation = animation(dev, s, previous, self.on_animation_error)
+        self.animation.show()
         dev.show_custom_frame()
-        self.update_wave()
+        self.update_animation()
 
-    # Software wave
+    # Animations
 
-    def stop_wave(self):
-        """Stop the animation, returning its phase so a replacement can continue from there."""
-        if not self.wave:
-            return 0.0
-        phase = self.wave.phase
-        self.wave.set_running(False)
-        self.wave = None
-        return phase
+    def stop_animation(self):
+        """Stop the animation and return it, so a replacement can continue from it."""
+        animation, self.animation = self.animation, None
+        if animation:
+            animation.set_running(False)
+        return animation
 
-    def update_wave(self):
+    def update_animation(self):
         """Stream frames only while the backlight is on."""
-        if self.wave:
-            self.wave.set_running(self.state['brightness'] > 0)
+        if self.animation:
+            self.animation.set_running(self.state['brightness'] > 0)
 
-    def on_wave_error(self, error):
-        log.warning('wave stopped: %s', error)
+    def on_animation_error(self, error):
+        log.warning('animation stopped: %s', error)
         self.last_error = str(error)
         self.close_device()
         self.emit_state()
@@ -579,7 +837,7 @@ class Daemon:
     def on_prepare_for_sleep(self, _conn, _sender, _path, _iface, _signal, params):
         (going_to_sleep,) = params.unpack()
         if going_to_sleep:
-            self.stop_wave()
+            self.stop_animation()
             return
         # The EC resets fan mode on resume; the USB device may re-enumerate too.
         log.info('resumed, reapplying settings')
@@ -616,7 +874,7 @@ class Daemon:
             return
         self.battery_saver = low
         log.info('battery saver %s', 'on' if low else 'off')
-        if self.state['effect'] == 'wave':
+        if self.state['effect'] in ANIMATIONS:
             try:
                 self.run(self.apply_effect)
             except DeviceError as e:
@@ -702,7 +960,7 @@ class Daemon:
     def do_SetBrightness(self, value):
         self.run(lambda dev: dev.set_brightness(value))
         self.state['brightness'] = value
-        self.update_wave()
+        self.update_animation()
 
     def do_SetLogo(self, enabled):
         self.run(lambda dev: dev.set_logo(enabled))

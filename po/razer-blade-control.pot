@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: razer-blade-control\n"
 "Report-Msgid-Bugs-To: https://github.com/SymonRod/razer-blade-control/"
 "issues\n"
-"POT-Creation-Date: 2026-11-05 22:26+0100\n"
+"POT-Creation-Date: 2026-11-05 22:56+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -42,115 +42,116 @@ msgstr ""
 msgid "Keyboard"
 msgstr ""
 
-#: extension.js:153 extension.js:250 extension.js:260
+#: extension.js:153 extension.js:248 extension.js:263
 msgid "RGB Keyboard"
 msgstr ""
 
-#: extension.js:166
-msgid "Low battery: Wave is shown as Static to save power"
-msgstr ""
-
-#: extension.js:173
+#: extension.js:171
 msgid "Color"
 msgstr ""
 
-#: extension.js:192 prefs.js:77
+#: extension.js:190 prefs.js:77
 msgid "Speed"
 msgstr ""
 
-#: extension.js:195
+#: extension.js:193
 msgid "Effect speed"
 msgstr ""
 
-#: extension.js:213
+#: extension.js:211
 msgid "Razer logo"
 msgstr ""
 
-#: extension.js:217
+#: extension.js:215
 msgid "Custom colors and more options…"
 msgstr ""
 
-#: extension.js:257
+#: extension.js:256
 msgid "Static · low battery"
 msgstr ""
 
-#: extension.js:286
+#: extension.js:261
+#, javascript-format
+msgid "Low battery: Static instead of %s to save power"
+msgstr ""
+
+#: extension.js:289
 msgid "Keyboard brightness"
 msgstr ""
 
-#: extension.js:311
+#: extension.js:314
 msgid "Fans"
 msgstr ""
 
-#: extension.js:325 extension.js:373 extension.js:384
+#: extension.js:328 extension.js:376 extension.js:387
 msgid "Fans and Performance"
 msgstr ""
 
-#: extension.js:328
+#: extension.js:331
 msgid "Profile"
 msgstr ""
 
-#: extension.js:337 extension.js:348
+#: extension.js:340 extension.js:351
 msgid "Fan speed"
 msgstr ""
 
-#: extension.js:338 daemon.js:35
+#: extension.js:341 daemon.js:38
 msgid "Automatic"
 msgstr ""
 
-#: extension.js:342 extension.js:392
+#: extension.js:345 extension.js:395
 msgid "Manual"
 msgstr ""
 
-#: extension.js:357 extension.js:392
+#: extension.js:360 extension.js:395
 #, javascript-format
 msgid "Manual · %d RPM"
 msgstr ""
 
-#: extension.js:382
+#: extension.js:385
 #, javascript-format
 msgid "Auto · %s"
 msgstr ""
 
-#: extension.js:408 extension.js:419 extension.js:455 extension.js:457
-#: extension.js:486
+#: extension.js:411 extension.js:422 extension.js:458 extension.js:460
+#: extension.js:489
 msgid "NVIDIA GPU"
 msgstr ""
 
-#: extension.js:421
+#: extension.js:424
 msgid "Mode at next boot"
 msgstr ""
 
-#: extension.js:437
+#: extension.js:440
 msgid "Restart now…"
 msgstr ""
 
-#: extension.js:455
+#: extension.js:458
 #, javascript-format
 msgid "%s failed with status %d"
 msgstr ""
 
-#: extension.js:476
+#: extension.js:479
 msgid "Powered off"
 msgstr ""
 
-#: extension.js:478
+#: extension.js:481
 msgid "Suspended"
 msgstr ""
 
-#: extension.js:478
+#: extension.js:481
 msgid "In use"
 msgstr ""
 
-#: extension.js:480 daemon.js:34
+#: extension.js:483 daemon.js:37
 msgid "Always on"
 msgstr ""
 
-#: extension.js:484
+#: extension.js:487
 msgid "Restart required"
 msgstr ""
 
-#: extension.js:487
+#: extension.js:490
 #, javascript-format
 msgid "Now: %s · changes after restart"
 msgstr ""
@@ -212,20 +213,20 @@ msgid "Battery"
 msgstr ""
 
 #: prefs.js:91
-msgid "Static wave below (%)"
+msgid "Static animations below (%)"
 msgstr ""
 
 #: prefs.js:92
 msgid ""
-"On battery, below this charge Wave turns into Static in the primary color to "
-"save CPU. 0 disables it."
+"On battery, below this charge Wave and Snake turn into Static in the primary "
+"color to save CPU. 0 disables it."
 msgstr ""
 
 #: prefs.js:101
 msgid "The razerbladed service is not running"
 msgstr ""
 
-#: prefs.js:119
+#: prefs.js:120
 msgid "Used when the battery is low"
 msgstr ""
 
@@ -249,34 +250,30 @@ msgstr ""
 msgid "Spectrum"
 msgstr ""
 
-#: daemon.js:22
+#: daemon.js:23
 msgid "Wave"
 msgstr ""
 
-#: daemon.js:23
-msgid "Reactive"
+#: daemon.js:25
+msgid "Snake"
 msgstr ""
 
-#: daemon.js:24
-msgid "Starlight"
-msgstr ""
-
-#: daemon.js:28
+#: daemon.js:31
 msgid "Balanced"
 msgstr ""
 
-#: daemon.js:29
+#: daemon.js:32
 msgid "Gaming"
 msgstr ""
 
-#: daemon.js:30
+#: daemon.js:33
 msgid "Creator"
 msgstr ""
 
-#: daemon.js:36
+#: daemon.js:39
 msgid "Off (Intel only)"
 msgstr ""
 
-#: daemon.js:40
+#: daemon.js:43
 msgid "Off"
 msgstr ""

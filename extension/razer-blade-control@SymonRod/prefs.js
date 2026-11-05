@@ -88,8 +88,8 @@ export default class RazerBladePreferences extends ExtensionPreferences {
         const batteryGroup = new Adw.PreferencesGroup({title: _('Battery')});
         page.add(batteryGroup);
         const thresholdRow = new Adw.SpinRow({
-            title: _('Static wave below (%)'),
-            subtitle: _('On battery, below this charge Wave turns into Static in the primary color to save CPU. 0 disables it.'),
+            title: _('Static animations below (%)'),
+            subtitle: _('On battery, below this charge Wave and Snake turn into Static in the primary color to save CPU. 0 disables it.'),
             adjustment: new Gtk.Adjustment({lower: 0, upper: 100, step_increment: 5, page_increment: 10}),
         });
         batteryGroup.add(thresholdRow);
@@ -113,10 +113,11 @@ export default class RazerBladePreferences extends ExtensionPreferences {
                 speedScale.adjustment.upper = info.maxSpeed ?? 4;
                 speedScale.set_value(state.speed);
                 directionRow.selected = state.direction - 1;
-                // The wave uses the main color when the battery saver turns it static
-                const isWave = state.effect === 'wave';
-                colorRow.visible = !!info.usesColor || isWave;
-                colorRow.subtitle = isWave ? _('Used when the battery is low') : '';
+                // Animations without a color of their own use the main one when the
+                // battery saver turns them static
+                const savedOnly = !!info.streamed && !info.usesColor;
+                colorRow.visible = !!info.usesColor || savedOnly;
+                colorRow.subtitle = savedOnly ? _('Used when the battery is low') : '';
                 color2Row.visible = !!info.usesColor2;
                 speedRow.visible = !!info.usesSpeed;
                 directionRow.visible = !!info.usesDirection;

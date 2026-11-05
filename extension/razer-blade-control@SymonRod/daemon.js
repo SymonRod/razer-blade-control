@@ -18,10 +18,13 @@ export const EFFECTS = [
     {id: 'breathing-dual', label: N_('Breathing (two colors)'), usesColor: true, usesColor2: true},
     {id: 'breathing-random', label: N_('Breathing (random)')},
     {id: 'spectrum', label: N_('Spectrum')},
-    // Software wave in razerbladed: maxSpeed matches len(WAVE_PERIODS)
-    {id: 'wave', label: N_('Wave'), usesDirection: true, usesSpeed: true, maxSpeed: 9},
-    {id: 'reactive', label: N_('Reactive'), usesColor: true, usesSpeed: true, maxSpeed: 4},
-    {id: 'starlight', label: N_('Starlight'), usesColor: true, usesSpeed: true, maxSpeed: 3},
+    // Animations streamed by razerbladed, turned static by its battery saver:
+    // maxSpeed matches len(WAVE_PERIODS) and len(SNAKE_STEPS)
+    {id: 'wave', label: N_('Wave'), usesDirection: true, usesSpeed: true, maxSpeed: 9, streamed: true},
+    {
+        id: 'snake', label: N_('Snake'), usesColor: true, usesColor2: true,
+        usesSpeed: true, maxSpeed: 9, streamed: true,
+    },
 ];
 
 export const POWER_MODES = {
@@ -39,6 +42,7 @@ export const GPU_MODES = {
 export function effectInfo(id) {
     return EFFECTS.find(e => e.id === id) ?? {id, label: id === 'none' ? N_('Off') : id};
 }
+
 
 export class DaemonClient {
     /**
