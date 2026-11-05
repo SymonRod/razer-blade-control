@@ -44,14 +44,19 @@ SUPPORTED_DEVICES = {
         'power_modes': ['balanced', 'gaming', 'creator'],
         'logo': True,
         'matrix': (6, 16),  # rows, columns
-        # Matrix cells with an LED ('#') on the UK (ISO) keyboard; wide keys use one cell
+        # Matrix cells of the UK (ISO) keyboard: '#' has an LED, '.' has none and the
+        # snake crosses it in one move, '-' has none and blocks the way (the spacebar)
         'leds': (
             '.###############',  # esc f1-f12 ins del
             '.#############.#',  # ` 1-0 - = backspace
             '.##############.',  # tab q-p [ ] enter (top half)
             '.#############..',  # caps a-l ; ' #
             '.#############.#',  # shift \ z-m , . / up shift
-            '.###.#...#.#####',  # ctrl fn super alt altgr ctrl left down right fn (space: no LED)
+            '.###.#---#.#####',  # ctrl fn super alt (space) altgr ctrl left down right fn
+        ),
+        # Keys that touch on the keyboard but not in the matrix (row, column)
+        'links': (
+            ((2, 14), (4, 15)),  # enter, right shift
         ),
     },
 }
@@ -433,9 +438,10 @@ def hue(h):
     return bytes(round(v * 255) for v in colorsys.hsv_to_rgb(h % 1.0, 1, 1))
 
 
-def led_neighbors(leds):
+def led_neighbors(leds, links=()):
     """Neighbors of every matrix cell with an LED: the nearest LED up, down, left and
-    right, so that a move crosses wide keys and gaps in the matrix in one go."""
+    right, so that a move crosses wide keys and gaps in the matrix ('.') in one go;
+    blocking cells ('-') can't be crossed. links are extra pairs of neighbors."""
     rows, cols = len(leds), len(leds[0])
     lit = {(r, c) for r in range(rows) for c in range(cols) if leds[r][c] == '#'}
     neighbors = {}
@@ -443,11 +449,14 @@ def led_neighbors(leds):
         near = []
         for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
             nr, nc = r + dr, c + dc
-            while 0 <= nr < rows and 0 <= nc < cols and (nr, nc) not in lit:
+            while 0 <= nr < rows and 0 <= nc < cols and leds[nr][nc] == '.':
                 nr, nc = nr + dr, nc + dc
             if (nr, nc) in lit:
                 near.append((nr, nc))
         neighbors[(r, c)] = near
+    for a, b in links:
+        neighbors[a].append(b)
+        neighbors[b].append(a)
     return neighbors
 
 
@@ -509,9 +518,9 @@ def hamiltonian_cycle(neighbors):
 
 
 @functools.cache
-def snake_board(leds):
+def snake_board(leds, links=()):
     """(cycle, neighbors) for the snake on the cells with an LED, computed once."""
-    neighbors = led_neighbors(leds)
+    neighbors = led_neighbors(leds, links)
     cycle = hamiltonian_cycle(neighbors)
     if cycle is not None:
         return cycle, neighbors
@@ -530,8 +539,8 @@ class SnakeGame:
     that stays among them can never trap the snake, so it always fills the whole board.
     """
 
-    def __init__(self, leds):
-        self.cycle, self.neighbors = snake_board(leds)
+    def __init__(self, leds, links=()):
+        self.cycle, self.neighbors = snake_board(leds, links)
         self.order = {cell: i for i, cell in enumerate(self.cycle)}
         self.reset()
 
@@ -660,7 +669,7 @@ class SnakeAnimation(Animation):
             self.game, self.won_at = previous.game, previous.won_at
         else:
             leds = dev.info.get('leds') or ('#' * self.cols,) * self.rows
-            self.game, self.won_at = SnakeGame(leds), None
+            self.game, self.won_at = SnakeGame(leds, dev.info.get('links', ())), None
         self.last_move = time.monotonic()
 
     def advance(self, now):

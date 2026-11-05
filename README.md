@@ -108,7 +108,8 @@ plays by itself: it follows a Hamiltonian cycle of the 6×16 matrix and takes sh
 where they can't trap it, so it always fills the keyboard; then the keyboard blinks and a new game starts.
 The snake is painted as a gradient from the primary color (head) to the secondary (tail), in the primary color
 only, or as a rainbow flowing along its body; `color3` is the food. It moves only on the matrix cells that have
-an LED (`leds` in `SUPPORTED_DEVICES`), jumping over wide keys and gaps. Animations stop at brightness 0, during suspend and with any other
+an LED (`leds` in `SUPPORTED_DEVICES`), jumping over wide keys and gaps but not over the spacebar (`-`); `links`
+adds keys that touch on the keyboard but not in the matrix. Animations stop at brightness 0, during suspend and with any other
 effect, which the EC handles at no cost. On battery, below `battery_threshold` (default 20%, `0` disables it;
 read from UPower) they temporarily become Static in the primary color and come back by themselves on AC power
 or above the threshold. New animations subclass `Animation` in `razerbladed.py` and go in `ANIMATIONS`.
