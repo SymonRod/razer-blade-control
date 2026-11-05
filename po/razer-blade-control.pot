@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: razer-blade-control\n"
 "Report-Msgid-Bugs-To: https://github.com/SymonRod/razer-blade-control/"
 "issues\n"
-"POT-Creation-Date: 2026-10-28 20:07+0100\n"
+"POT-Creation-Date: 2026-11-05 22:26+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,261 +18,265 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: extension.js:30
+#: extension.js:31
 msgid "Draws about 7 W even when idle"
 msgstr ""
 
-#: extension.js:31
+#: extension.js:32
 msgid "Powers off by itself when nothing uses it"
 msgstr ""
 
-#: extension.js:32
+#: extension.js:33
 msgid "No HDMI, GPU USB-C or CUDA"
 msgstr ""
 
-#: extension.js:73
+#: extension.js:74
 msgid "Service not running"
 msgstr ""
 
-#: extension.js:75 prefs.js:101
+#: extension.js:76 prefs.js:102
 msgid "Device not accessible"
 msgstr ""
 
-#: extension.js:138
+#: extension.js:139
 msgid "Keyboard"
 msgstr ""
 
-#: extension.js:152 extension.js:240 extension.js:249
+#: extension.js:153 extension.js:250 extension.js:260
 msgid "RGB Keyboard"
 msgstr ""
 
-#: extension.js:163
+#: extension.js:166
+msgid "Low battery: Wave is shown as Static to save power"
+msgstr ""
+
+#: extension.js:173
 msgid "Color"
 msgstr ""
 
-#: extension.js:182 prefs.js:76
+#: extension.js:192 prefs.js:77
 msgid "Speed"
 msgstr ""
 
-#: extension.js:185
+#: extension.js:195
 msgid "Effect speed"
 msgstr ""
 
-#: extension.js:203
+#: extension.js:213
 msgid "Razer logo"
 msgstr ""
 
-#: extension.js:207
+#: extension.js:217
 msgid "Custom colors and more options…"
 msgstr ""
 
-#: extension.js:247
+#: extension.js:257
 msgid "Static · low battery"
 msgstr ""
 
-#: extension.js:275
+#: extension.js:286
 msgid "Keyboard brightness"
 msgstr ""
 
-#: extension.js:300
+#: extension.js:311
 msgid "Fans"
 msgstr ""
 
-#: extension.js:314 extension.js:362 extension.js:373
+#: extension.js:325 extension.js:373 extension.js:384
 msgid "Fans and Performance"
 msgstr ""
 
-#: extension.js:317
+#: extension.js:328
 msgid "Profile"
 msgstr ""
 
-#: extension.js:326 extension.js:337
+#: extension.js:337 extension.js:348
 msgid "Fan speed"
 msgstr ""
 
-#: extension.js:327 daemon.js:34
+#: extension.js:338 daemon.js:35
 msgid "Automatic"
 msgstr ""
 
-#: extension.js:331 extension.js:381
+#: extension.js:342 extension.js:392
 msgid "Manual"
 msgstr ""
 
-#: extension.js:346 extension.js:381
+#: extension.js:357 extension.js:392
 #, javascript-format
 msgid "Manual · %d RPM"
 msgstr ""
 
-#: extension.js:371
+#: extension.js:382
 #, javascript-format
 msgid "Auto · %s"
 msgstr ""
 
-#: extension.js:397 extension.js:408 extension.js:444 extension.js:446
-#: extension.js:475
+#: extension.js:408 extension.js:419 extension.js:455 extension.js:457
+#: extension.js:486
 msgid "NVIDIA GPU"
 msgstr ""
 
-#: extension.js:410
+#: extension.js:421
 msgid "Mode at next boot"
 msgstr ""
 
-#: extension.js:426
+#: extension.js:437
 msgid "Restart now…"
 msgstr ""
 
-#: extension.js:444
+#: extension.js:455
 #, javascript-format
 msgid "%s failed with status %d"
 msgstr ""
 
-#: extension.js:465
+#: extension.js:476
 msgid "Powered off"
 msgstr ""
 
-#: extension.js:467
+#: extension.js:478
 msgid "Suspended"
 msgstr ""
 
-#: extension.js:467
+#: extension.js:478
 msgid "In use"
 msgstr ""
 
-#: extension.js:469 daemon.js:33
+#: extension.js:480 daemon.js:34
 msgid "Always on"
 msgstr ""
 
-#: extension.js:473
+#: extension.js:484
 msgid "Restart required"
 msgstr ""
 
-#: extension.js:476
+#: extension.js:487
 #, javascript-format
 msgid "Now: %s · changes after restart"
 msgstr ""
 
-#: prefs.js:26
+#: prefs.js:27
 msgid "Device"
 msgstr ""
 
-#: prefs.js:28
+#: prefs.js:29
 msgid "Status"
 msgstr ""
 
-#: prefs.js:30
+#: prefs.js:31
 msgid "Reapply"
 msgstr ""
 
-#: prefs.js:32
+#: prefs.js:33
 msgid "Send all saved settings to the laptop again"
 msgstr ""
 
-#: prefs.js:38
+#: prefs.js:39
 msgid "Keyboard Effect"
 msgstr ""
 
-#: prefs.js:43
+#: prefs.js:44
 msgid "Effect"
 msgstr ""
 
-#: prefs.js:58
+#: prefs.js:59
 msgid "Primary color"
 msgstr ""
 
-#: prefs.js:59
+#: prefs.js:60
 msgid "Secondary color"
 msgstr ""
 
-#: prefs.js:73
+#: prefs.js:74
 msgid "Slow"
 msgstr ""
 
-#: prefs.js:75
+#: prefs.js:76
 msgid "Fast"
 msgstr ""
 
-#: prefs.js:81
+#: prefs.js:82
 msgid "Direction"
 msgstr ""
 
-#: prefs.js:82
+#: prefs.js:83
 msgid "Left to right"
 msgstr ""
 
-#: prefs.js:82
+#: prefs.js:83
 msgid "Right to left"
 msgstr ""
 
-#: prefs.js:87
+#: prefs.js:88
 msgid "Battery"
 msgstr ""
 
-#: prefs.js:90
+#: prefs.js:91
 msgid "Static wave below (%)"
 msgstr ""
 
-#: prefs.js:91
+#: prefs.js:92
 msgid ""
 "On battery, below this charge Wave turns into Static in the primary color to "
 "save CPU. 0 disables it."
 msgstr ""
 
-#: prefs.js:100
+#: prefs.js:101
 msgid "The razerbladed service is not running"
 msgstr ""
 
-#: prefs.js:118
+#: prefs.js:119
 msgid "Used when the battery is low"
 msgstr ""
 
-#: daemon.js:15
+#: daemon.js:16
 msgid "Static"
 msgstr ""
 
-#: daemon.js:16
+#: daemon.js:17
 msgid "Breathing"
 msgstr ""
 
-#: daemon.js:17
+#: daemon.js:18
 msgid "Breathing (two colors)"
 msgstr ""
 
-#: daemon.js:18
+#: daemon.js:19
 msgid "Breathing (random)"
 msgstr ""
 
-#: daemon.js:19
+#: daemon.js:20
 msgid "Spectrum"
 msgstr ""
 
-#: daemon.js:21
+#: daemon.js:22
 msgid "Wave"
 msgstr ""
 
-#: daemon.js:22
+#: daemon.js:23
 msgid "Reactive"
 msgstr ""
 
-#: daemon.js:23
+#: daemon.js:24
 msgid "Starlight"
 msgstr ""
 
-#: daemon.js:27
+#: daemon.js:28
 msgid "Balanced"
 msgstr ""
 
-#: daemon.js:28
+#: daemon.js:29
 msgid "Gaming"
 msgstr ""
 
-#: daemon.js:29
+#: daemon.js:30
 msgid "Creator"
 msgstr ""
 
-#: daemon.js:35
+#: daemon.js:36
 msgid "Off (Intel only)"
 msgstr ""
 
-#: daemon.js:39
+#: daemon.js:40
 msgid "Off"
 msgstr ""

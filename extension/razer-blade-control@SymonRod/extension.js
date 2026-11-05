@@ -161,6 +161,15 @@ class KeyboardToggle extends QuickMenuToggle {
             this._effectItems.set(effect.id, item);
         }
 
+        // Explains why the keyboard shows Static while Wave is selected
+        this._batterySaverItem = new PopupMenu.PopupMenuItem(
+            _('Low battery: Wave is shown as Static to save power'),
+            {reactive: false, can_focus: false});
+        this._batterySaverItem.label.add_style_class_name('razerblade-hint');
+        this._batterySaverItem.label.opacity = 170; // dimmed in both light and dark styles
+        this._batterySaverItem.label.clutter_text.line_wrap = true;
+        section.addMenuItem(this._batterySaverItem);
+
         section.addMenuItem(new PopupMenu.PopupSeparatorMenuItem(_('Color')));
         const swatchItem = new PopupMenu.PopupBaseMenuItem({activate: false, can_focus: false});
         const swatchBox = new St.BoxLayout({style_class: 'razerblade-swatches', x_expand: true});
@@ -242,11 +251,12 @@ class KeyboardToggle extends QuickMenuToggle {
             return;
         }
 
+        const waveSaved = state['battery-saver'] && state.effect === 'wave';
         this.set({
             checked: state.effect !== 'none',
-            subtitle: state['battery-saver'] && state.effect === 'wave'
-                ? _('Static · low battery') : _(effectInfo(state.effect).label),
+            subtitle: waveSaved ? _('Static · low battery') : _(effectInfo(state.effect).label),
         });
+        this._batterySaverItem.visible = waveSaved;
         this.menu.setHeader(this._keyboardIcon, _('RGB Keyboard'), state.device);
 
         for (const [id, item] of this._effectItems)
