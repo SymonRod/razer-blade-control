@@ -87,7 +87,7 @@ EFFECT_STATIC = 0x06
 EFFECT_STARLIGHT = 0x19
 
 EFFECTS = ['none', 'static', 'breathing', 'breathing-dual', 'breathing-random',
-           'spectrum', 'wave', 'snake', 'reactive', 'starlight']
+           'spectrum', 'wave', 'snake', 'chase', 'reactive', 'starlight']
 
 NOSTORE = 0x00
 VARSTORE = 0x01
@@ -114,6 +114,21 @@ SNAKE_WIN_SECONDS = 3.0  # the keyboard blinks this long before a new game
 # Path search through the LEDs: attempts and backtracking steps per attempt
 SNAKE_SEARCH_ATTEMPTS = 50
 SNAKE_SEARCH_STEPS = 3000
+# Seconds per player move in Chase, indexed by speed - 1
+CHASE_STEPS = (0.08, 0.1, 0.12, 0.14, 0.17, 0.2, 0.24, 0.28, 0.33)
+CHASE_CHASERS = 2
+CHASE_LIVES = 3
+# Chaser moves per player move: they start slower and speed up at every level cleared
+CHASE_CHASER_SPEED = 0.7
+CHASE_LEVEL_SPEEDUP = 0.05
+CHASE_MAX_CHASER_SPEED = 0.9
+CHASE_FRIGHT_SPEED = 0.5  # chasers on the run after a power dot
+CHASE_FRIGHT_MOVES = 30  # player moves the chasers stay on the run
+CHASE_FRIGHT_BLINK_MOVES = 8  # they blink during the last ones
+CHASE_RESPAWN_MOVES = 15  # player moves an eaten chaser takes to come back home
+CHASE_SAFE_ROOM = 8  # cells the player wants to reach before any chaser
+CHASE_DOT_LEVEL = 0.2  # brightness of the dots; power dots pulse at full brightness
+CHASE_EVENT_SECONDS = {'caught': 1.5, 'over': 3.0, 'cleared': 3.0}
 
 NVIDIA_VENDOR = '0x10de'
 GPU_CONFIG = Path('/etc/modprobe.d/razerblade-gpu.conf')  # written by razerblade-gpu
@@ -127,7 +142,7 @@ DEFAULT_STATE = {
     'last_effect': 'static',
     'color': '#00ff00',
     'color2': '#0000ff',
-    'color3': '#ff0000',  # snake food
+    'color3': '#ff0000',  # snake food, chase chasers
     'style': 'gradient',  # one of SNAKE_STYLES
     'speed': 2,
     'direction': 1,
@@ -725,7 +740,289 @@ class SnakeAnimation(Animation):
         return dim(mix(self.tail_color, self.color, t), level)
 
 
-ANIMATIONS = {'wave': WaveAnimation, 'snake': SnakeAnimation}
+def graph_distances(neighbors, start):
+    """Moves from start to every cell it can reach."""
+    dist, todo = {start: 0}, deque([start])
+    while todo:
+        cell = todo.popleft()
+        for n in neighbors[cell]:
+            if n not in dist:
+                dist[n] = dist[cell] + 1
+                todo.append(n)
+    return dist
+
+
+@functools.cache
+def chase_board(leds, links=()):
+    """(neighbors, distances, player start, chaser homes, power dots) for Chase.
+
+    The player starts on the LED nearest to the middle of the matrix, the chasers as far
+    from it (and from each other) as possible, and the power dots sit in the corners.
+    """
+    rows, cols = len(leds), len(leds[0])
+    neighbors = led_neighbors(leds, links)
+    start = min(neighbors, key=lambda cell: (math.dist(cell, ((rows - 1) / 2, (cols - 1) / 2)), cell))
+    # Play on the cells reachable from the start only
+    reachable = graph_distances(neighbors, start)
+    neighbors = {cell: [n for n in near if n in reachable]
+                 for cell, near in neighbors.items() if cell in reachable}
+    dist = {cell: graph_distances(neighbors, cell) for cell in neighbors}
+    corners = ((0, 0), (0, cols - 1), (rows - 1, 0), (rows - 1, cols - 1))
+    power = {min(neighbors, key=lambda cell: (math.dist(cell, corner), cell)) for corner in corners}
+    power.discard(start)
+    homes = []
+    for _ in range(min(CHASE_CHASERS, len(neighbors) - len(power) - 1)):
+        homes.append(max((cell for cell in neighbors
+                          if cell != start and cell not in homes and cell not in power),
+                         key=lambda cell: (min(dist[cell][o] for o in [start] + homes), cell)))
+    return neighbors, dist, start, tuple(homes), frozenset(power)
+
+
+class Chaser:
+    def __init__(self, home):
+        self.home = home
+        self.cell = home
+        self.prev = None  # cell it came from: it doesn't turn back, except in dead ends
+        self.frightened = False
+        self.respawn = 0  # player moves left before an eaten chaser comes back
+        self.budget = 0.0  # moves owed, since chasers are slower than the player
+
+
+class ChaseGame:
+    """Maze chase that plays by itself on the LEDs.
+
+    The player eats the dots, heading for the nearest one it can reach before the chasers
+    and steering clear of places where they could corner it. The first chaser hunts the
+    player, the second lies in wait at the dot the player is going for. Power dots put the
+    chasers on the run for a while: the player hunts them, and eaten ones go back home.
+    Clearing the board starts a faster level; being caught costs one of CHASE_LIVES.
+    """
+
+    def __init__(self, leds, links=()):
+        self.neighbors, self.dist, self.start, self.homes, self.power_cells = chase_board(leds, links)
+        self.new_game()
+
+    def new_game(self):
+        self.lives = CHASE_LIVES
+        self.level = 0
+        self.new_level()
+
+    def new_level(self):
+        self.power = set(self.power_cells)
+        self.dots = set(self.neighbors) - self.power - {self.start}
+        self.new_round()
+
+    def new_round(self):
+        self.player = self.start
+        self.player_prev = None
+        self.goal = None  # cell the player is heading for
+        self.chasers = [Chaser(home) for home in self.homes]
+        self.fright = 0
+        self.event = None  # 'caught', 'over' or 'cleared' until after_event()
+
+    @property
+    def chaser_speed(self):
+        return min(CHASE_CHASER_SPEED + self.level * CHASE_LEVEL_SPEEDUP, CHASE_MAX_CHASER_SPEED)
+
+    def after_event(self):
+        """Go on once the event has been shown."""
+        if self.event == 'over':
+            self.new_game()
+        elif not self.dots and not self.power:
+            self.level += 1
+            self.new_level()
+        else:
+            self.new_round()
+
+    def step(self):
+        """One player move, then the chaser moves that fall in it."""
+        self.move_player(self.player_move())
+        if self.event:
+            return
+        if self.fright:
+            self.fright -= 1
+            if not self.fright:
+                for chaser in self.chasers:
+                    chaser.frightened = False
+        for i, chaser in enumerate(self.chasers):
+            if chaser.respawn:
+                chaser.respawn -= 1
+                if chaser.respawn:
+                    continue
+                chaser.cell, chaser.prev, chaser.budget = chaser.home, None, 0.0
+            else:
+                chaser.budget += CHASE_FRIGHT_SPEED if chaser.frightened else self.chaser_speed
+                if chaser.budget >= 1:
+                    chaser.budget -= 1
+                    chaser.prev, chaser.cell = chaser.cell, self.chaser_move(i, chaser)
+            self.collide(chaser)
+            if self.event:
+                return
+
+    def move_player(self, cell):
+        self.player_prev, self.player = self.player, cell
+        self.dots.discard(cell)
+        if cell in self.power:
+            self.power.discard(cell)
+            self.fright = CHASE_FRIGHT_MOVES
+            for chaser in self.chasers:
+                if not chaser.respawn:
+                    chaser.frightened = True
+                    chaser.prev = None  # free to turn back and flee
+        for chaser in self.chasers:
+            self.collide(chaser)
+            if self.event:
+                return
+        if not self.dots and not self.power:
+            self.event = 'cleared'
+
+    def collide(self, chaser):
+        if chaser.respawn or chaser.cell != self.player:
+            return
+        if chaser.frightened:
+            chaser.frightened = False
+            chaser.respawn = CHASE_RESPAWN_MOVES
+        else:
+            self.lives -= 1
+            self.event = 'caught' if self.lives else 'over'
+
+    def chaser_move(self, index, chaser):
+        options = [n for n in self.neighbors[chaser.cell] if n != chaser.prev] or [chaser.prev]
+        # Don't pile up on another chaser if there's another way
+        others = {c.cell for c in self.chasers if c is not chaser and not c.respawn}
+        options = [n for n in options if n not in others] or options
+        if chaser.frightened:
+            if random.random() < 0.3:
+                return random.choice(options)
+            return max(options, key=lambda n: (self.dist[n][self.player], random.random()))
+        if index == 0:
+            target, wander = self.player, 0.1
+        elif index == 1:
+            target, wander = self.goal or self.player, 0.2
+        else:
+            target, wander = self.player, 0.5
+        if random.random() < wander:
+            return random.choice(options)
+        return min(options, key=lambda n: (self.dist[n][target], random.random()))
+
+    def player_move(self):
+        hunters = [c.cell for c in self.chasers if not c.respawn and not c.frightened]
+        prey = [c.cell for c in self.chasers if not c.respawn and c.frightened]
+        # Moves the closest hunter needs to reach each cell
+        threat = {cell: min((self.dist[h][cell] for h in hunters), default=math.inf)
+                  for cell in self.neighbors}
+        targets = self.dots | self.power
+        best, best_score, best_goal = None, -math.inf, None
+        for n in self.neighbors[self.player]:
+            # Cells the player can reach from n before any hunter
+            safe = {n: 0}
+            todo = deque([n]) if threat[n] > 1 else deque()
+            while todo:
+                cell = todo.popleft()
+                for m in self.neighbors[cell]:
+                    if m not in safe and safe[cell] + 1 < threat[m]:
+                        safe[m] = safe[cell] + 1
+                        todo.append(m)
+            # The nearest dot it can safely reach, or a chaser on the run it can catch in time
+            goals = [(safe[t], t) for t in targets if t in safe]
+            goals += [(safe[p] / 2 - 2, p) for p in prey if p in safe and safe[p] < self.fright]
+            if goals:
+                goal_distance, goal = min(goals)
+            else:
+                goal_distance, goal = min(((self.dist[n][t] + 10, t) for t in targets),
+                                          default=(0, None))
+            score = -goal_distance - 50 * max(CHASE_SAFE_ROOM - len(safe), 0)
+            if threat[n] <= 1:  # onto a hunter or right next to one
+                score -= 1000 - 100 * threat[n]
+            if n == self.player_prev:  # don't dither back and forth
+                score -= 0.5
+            score += random.random() * 0.1
+            if score > best_score:
+                best, best_score, best_goal = n, score, goal
+        self.goal = best_goal
+        return best
+
+
+class ChaseAnimation(Animation):
+    """ChaseGame: the primary color is the player, the secondary the dots, color3 the chasers."""
+
+    FRIGHTENED_COLOR = b'\xff\xff\xff'
+
+    def __init__(self, dev, state, previous, on_error):
+        super().__init__(dev, on_error)
+        self.interval = CHASE_STEPS[min(max(state['speed'], 1), len(CHASE_STEPS)) - 1]
+        self.color = parse_color(state['color'])
+        self.dot_color = parse_color(state['color2'])
+        self.chaser_color = parse_color(state['color3'])
+        # Speed and color changes keep the game going
+        if isinstance(previous, ChaseAnimation):
+            self.game, self.event_at = previous.game, previous.event_at
+        else:
+            leds = dev.info.get('leds') or ('#' * self.cols,) * self.rows
+            self.game, self.event_at = ChaseGame(leds, dev.info.get('links', ())), None
+        self.last_move = time.monotonic()
+
+    def advance(self, now):
+        if now - self.last_move > 1.0:  # paused meanwhile: don't replay the missed moves
+            self.last_move = now
+        while not self.game.event and now - self.last_move >= self.interval:
+            self.game.step()
+            self.last_move += self.interval
+        if not self.game.event:
+            return
+        if self.event_at is None:
+            self.event_at = now
+        elif now - self.event_at >= CHASE_EVENT_SECONDS[self.game.event]:
+            self.game.after_event()
+            self.event_at = None
+            self.last_move = now
+
+    def render(self, now):
+        self.advance(now)
+        game = self.game
+        if game.event in ('cleared', 'over'):
+            # Board cleared: blink in the player's color; game over: fade out in the chasers'
+            t = (now - self.event_at) / CHASE_EVENT_SECONDS[game.event]
+            if game.event == 'cleared':
+                color, level = self.color, (1 + math.cos(2 * math.pi * 3 * t)) / 2
+            else:
+                color, level = self.chaser_color, (1 - t) * (1 + math.cos(2 * math.pi * 4 * t)) / 2
+            return [dim(color * self.cols, level)] * self.rows
+
+        frame = [bytearray(3 * self.cols) for _ in range(self.rows)]
+
+        def put(cell, color):
+            r, c = cell
+            frame[r][3 * c:3 * c + 3] = color
+
+        for cell in game.dots:
+            put(cell, dim(self.dot_color, CHASE_DOT_LEVEL))
+        for cell in game.power:
+            put(cell, dim(self.dot_color, 0.6 + 0.4 * math.cos(2 * math.pi * 2 * now)))
+        for chaser in game.chasers:
+            if chaser.respawn:  # eaten: its home glows faintly until it's back
+                put(chaser.home, dim(self.chaser_color, 0.1))
+        if game.event == 'caught':
+            # The player blinks in the chasers' color
+            caught = int((now - self.event_at) * 8) % 2
+            put(game.player, self.chaser_color if caught else self.color)
+        else:
+            progress = min((now - self.last_move) / self.interval, 1.0)
+            if game.player_prev:  # fading out until the next move
+                put(game.player_prev, dim(self.color, 0.4 * (1 - progress)))
+            put(game.player, self.color)
+        for chaser in game.chasers:
+            if chaser.respawn or (game.event == 'caught' and chaser.cell == game.player):
+                continue
+            color = self.chaser_color
+            if chaser.frightened:
+                blinking = game.fright <= CHASE_FRIGHT_BLINK_MOVES and int(now * 6) % 2
+                color = self.chaser_color if blinking else dim(self.FRIGHTENED_COLOR, 0.6)
+            put(chaser.cell, color)
+        return [bytes(row) for row in frame]
+
+
+ANIMATIONS = {'wave': WaveAnimation, 'snake': SnakeAnimation, 'chase': ChaseAnimation}
 
 
 class Daemon:

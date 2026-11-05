@@ -98,7 +98,7 @@ export default class RazerBladePreferences extends ExtensionPreferences {
         page.add(batteryGroup);
         const thresholdRow = new Adw.SpinRow({
             title: _('Static animations below (%)'),
-            subtitle: _('On battery, below this charge Wave and Snake turn into Static in the primary color to save CPU. 0 disables it.'),
+            subtitle: _('On battery, below this charge Wave, Snake and Chase turn into Static in the primary color to save CPU. 0 disables it.'),
             adjustment: new Gtk.Adjustment({lower: 0, upper: 100, step_increment: 5, page_increment: 10}),
         });
         batteryGroup.add(thresholdRow);

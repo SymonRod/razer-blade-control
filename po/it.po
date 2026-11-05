@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: razer-blade-control\n"
 "Report-Msgid-Bugs-To: https://github.com/SymonRod/razer-blade-control/"
 "issues\n"
-"POT-Creation-Date: 2026-11-05 22:52+0100\n"
+"POT-Creation-Date: 2026-11-05 23:09+0100\n"
 "PO-Revision-Date: 2026-10-28 20:07+0100\n"
 "Last-Translator: SymonRod\n"
 "Language-Team: Italian\n"
@@ -96,7 +96,7 @@ msgstr "Profilo"
 msgid "Fan speed"
 msgstr "Velocità ventole"
 
-#: extension.js:342 daemon.js:48
+#: extension.js:342 daemon.js:52
 msgid "Automatic"
 msgstr "Automatica"
 
@@ -144,7 +144,7 @@ msgstr "Sospesa"
 msgid "In use"
 msgstr "In uso"
 
-#: extension.js:484 daemon.js:47
+#: extension.js:484 daemon.js:51
 msgid "Always on"
 msgstr "Sempre accesa"
 
@@ -185,11 +185,11 @@ msgstr "Effetto"
 msgid "Style"
 msgstr "Stile"
 
-#: prefs.js:65 prefs.js:137 daemon.js:68
+#: prefs.js:65 prefs.js:137 daemon.js:74
 msgid "Primary color"
 msgstr "Colore principale"
 
-#: prefs.js:66 daemon.js:70
+#: prefs.js:66 daemon.js:76
 msgid "Secondary color"
 msgstr "Colore secondario"
 
@@ -223,11 +223,11 @@ msgstr "Animazioni statiche sotto il (%)"
 
 #: prefs.js:101
 msgid ""
-"On battery, below this charge Wave and Snake turn into Static in the primary "
-"color to save CPU. 0 disables it."
+"On battery, below this charge Wave, Snake and Chase turn into Static in the "
+"primary color to save CPU. 0 disables it."
 msgstr ""
-"A batteria, sotto questa soglia Onda e Snake diventano Statico nel colore "
-"principale per risparmiare CPU. 0 disattiva."
+"A batteria, sotto questa soglia Onda, Snake e Inseguimento diventano Statico "
+"nel colore principale per risparmiare CPU. 0 disattiva."
 
 #: prefs.js:110
 msgid "The razerbladed service is not running"
@@ -293,30 +293,46 @@ msgstr "Colore del serpente"
 msgid "Rainbow"
 msgstr "Arcobaleno"
 
-#: daemon.js:36
+#: daemon.js:37
+msgid "Chase"
+msgstr "Inseguimento"
+
+#: daemon.js:38
+msgid "Player color"
+msgstr "Colore del giocatore"
+
+#: daemon.js:38
+msgid "Dot color"
+msgstr "Colore dei puntini"
+
+#: daemon.js:38
+msgid "Chaser color"
+msgstr "Colore degli inseguitori"
+
+#: daemon.js:40
 msgid "Reactive"
 msgstr "Reattivo"
 
-#: daemon.js:37
+#: daemon.js:41
 msgid "Starlight"
 msgstr "Starlight"
 
-#: daemon.js:41
+#: daemon.js:45
 msgid "Balanced"
 msgstr "Bilanciato"
 
-#: daemon.js:42
+#: daemon.js:46
 msgid "Gaming"
 msgstr "Gaming"
 
-#: daemon.js:43
+#: daemon.js:47
 msgid "Creator"
 msgstr "Creator"
 
-#: daemon.js:49
+#: daemon.js:53
 msgid "Off (Intel only)"
 msgstr "Spenta (solo Intel)"
 
-#: daemon.js:53
+#: daemon.js:57
 msgid "Off"
 msgstr "Spento"

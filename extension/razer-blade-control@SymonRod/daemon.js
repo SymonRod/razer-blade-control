@@ -19,7 +19,7 @@ export const EFFECTS = [
     {id: 'breathing-random', label: N_('Breathing (random)')},
     {id: 'spectrum', label: N_('Spectrum')},
     // Animations streamed by razerbladed, turned static by its battery saver:
-    // maxSpeed matches len(WAVE_PERIODS) and len(SNAKE_STEPS)
+    // maxSpeed matches len(WAVE_PERIODS), len(SNAKE_STEPS) and len(CHASE_STEPS)
     {id: 'wave', label: N_('Wave'), usesDirection: true, usesSpeed: true, maxSpeed: 9, streamed: true},
     {
         id: 'snake', label: N_('Snake'), usesSpeed: true, maxSpeed: 9, streamed: true,
@@ -32,6 +32,10 @@ export const EFFECTS = [
             {id: 'solid', label: N_('Single color'), colors: {color: N_('Snake color'), color3: N_('Food color')}},
             {id: 'rainbow', label: N_('Rainbow'), colors: {color3: N_('Food color')}},
         ],
+    },
+    {
+        id: 'chase', label: N_('Chase'), usesSpeed: true, maxSpeed: 9, streamed: true,
+        colors: {color: N_('Player color'), color2: N_('Dot color'), color3: N_('Chaser color')},
     },
     {id: 'reactive', label: N_('Reactive'), usesColor: true, usesSpeed: true, maxSpeed: 4},
     {id: 'starlight', label: N_('Starlight'), usesColor: true, usesSpeed: true, maxSpeed: 3},
@@ -61,6 +65,8 @@ export function effectInfo(id) {
  * @returns {{color?: string, color2?: string, color3?: string}}
  */
 export function effectColors(info, style) {
+    if (info.colors)
+        return info.colors;
     if (info.styles)
         return (info.styles.find(s => s.id === style) ?? info.styles[0]).colors;
     const colors = {};

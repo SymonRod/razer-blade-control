@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: razer-blade-control\n"
 "Report-Msgid-Bugs-To: https://github.com/SymonRod/razer-blade-control/"
 "issues\n"
-"POT-Creation-Date: 2026-11-05 22:52+0100\n"
+"POT-Creation-Date: 2026-11-05 23:09+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -95,7 +95,7 @@ msgstr ""
 msgid "Fan speed"
 msgstr ""
 
-#: extension.js:342 daemon.js:48
+#: extension.js:342 daemon.js:52
 msgid "Automatic"
 msgstr ""
 
@@ -143,7 +143,7 @@ msgstr ""
 msgid "In use"
 msgstr ""
 
-#: extension.js:484 daemon.js:47
+#: extension.js:484 daemon.js:51
 msgid "Always on"
 msgstr ""
 
@@ -184,11 +184,11 @@ msgstr ""
 msgid "Style"
 msgstr ""
 
-#: prefs.js:65 prefs.js:137 daemon.js:68
+#: prefs.js:65 prefs.js:137 daemon.js:74
 msgid "Primary color"
 msgstr ""
 
-#: prefs.js:66 daemon.js:70
+#: prefs.js:66 daemon.js:76
 msgid "Secondary color"
 msgstr ""
 
@@ -222,8 +222,8 @@ msgstr ""
 
 #: prefs.js:101
 msgid ""
-"On battery, below this charge Wave and Snake turn into Static in the primary "
-"color to save CPU. 0 disables it."
+"On battery, below this charge Wave, Snake and Chase turn into Static in the "
+"primary color to save CPU. 0 disables it."
 msgstr ""
 
 #: prefs.js:110
@@ -290,30 +290,46 @@ msgstr ""
 msgid "Rainbow"
 msgstr ""
 
-#: daemon.js:36
+#: daemon.js:37
+msgid "Chase"
+msgstr ""
+
+#: daemon.js:38
+msgid "Player color"
+msgstr ""
+
+#: daemon.js:38
+msgid "Dot color"
+msgstr ""
+
+#: daemon.js:38
+msgid "Chaser color"
+msgstr ""
+
+#: daemon.js:40
 msgid "Reactive"
 msgstr ""
 
-#: daemon.js:37
+#: daemon.js:41
 msgid "Starlight"
 msgstr ""
 
-#: daemon.js:41
+#: daemon.js:45
 msgid "Balanced"
 msgstr ""
 
-#: daemon.js:42
+#: daemon.js:46
 msgid "Gaming"
 msgstr ""
 
-#: daemon.js:43
+#: daemon.js:47
 msgid "Creator"
 msgstr ""
 
-#: daemon.js:49
+#: daemon.js:53
 msgid "Off (Intel only)"
 msgstr ""
 
-#: daemon.js:53
+#: daemon.js:57
 msgid "Off"
 msgstr ""
