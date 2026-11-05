@@ -76,7 +76,9 @@ VARSTORE = 0x01
 LOGO_LED = 0x04
 
 # The EC's own wave has a fixed speed, so the wave is streamed as custom frames.
-WAVE_FPS = 30
+WAVE_FPS = 20
+# A frame request is usually acknowledged within 1-2 ms, rarely after ~10 ms
+FRAME_ACK_TIMEOUT = 0.02
 # Seconds for the rainbow to cross the keyboard, indexed by speed - 1 (1 is the fastest)
 WAVE_PERIODS = (0.6, 0.8, 1.1, 1.5, 2.0, 2.7, 3.6, 4.8, 6.4)
 
@@ -302,9 +304,27 @@ class BladeDevice:
         raise DeviceError(f'no valid response to 0x{command_class:02X}:0x{command_id:02X}')
 
     def write(self, request):
-        """Send a prebuilt request without waiting for the response (animation frames)."""
+        """Send a prebuilt request (animation frames) and wait until it's processed.
+
+        The firmware drops a request that arrives while it's still busy with the
+        previous one: a fire-and-forget burst loses about a quarter of the frames.
+        A request that isn't acknowledged in time is resent once; after that the
+        frame is left as it is, the next one will replace it anyway.
+        """
         try:
-            fcntl.ioctl(self.fd, HIDIOCSFEATURE, request)
+            for _attempt in range(2):
+                fcntl.ioctl(self.fd, HIDIOCSFEATURE, request)
+                deadline = time.monotonic() + FRAME_ACK_TIMEOUT
+                while time.monotonic() < deadline:
+                    response = bytearray(REPORT_LEN + 1)
+                    fcntl.ioctl(self.fd, HIDIOCGFEATURE, response, True)
+                    # Until the firmware takes the request, it still answers for the
+                    # previous one: compare class, id and the first two arguments
+                    # (they tell the matrix rows apart).
+                    if response[1] != RAZER_STATUS_BUSY and response[7:11] == request[7:11]:
+                        if response[1] == RAZER_STATUS_SUCCESS:
+                            return
+                        break
         except OSError as e:
             raise DeviceError(f'I/O error on {self.path}: {e.strerror}') from e
 
